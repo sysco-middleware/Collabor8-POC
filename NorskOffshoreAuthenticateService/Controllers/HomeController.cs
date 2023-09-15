@@ -31,7 +31,7 @@ namespace NorskOffshoreAuthenticateService.Controllers
             }
             else
             {
-                return RedirectToAction("GetUserItems", "Users");
+                return RedirectToAction("GetLoggedInGraphUser", "Users");
             }
         }
     }
