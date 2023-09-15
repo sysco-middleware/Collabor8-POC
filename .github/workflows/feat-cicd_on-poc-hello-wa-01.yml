@@ -24,34 +24,34 @@ jobs:
 
       # build frontend client
       - name: Build with dotnet
-        working-directory: ./NorskOffshoreAuthenticateClient
+        working-directory: ${{ github.workspace }}/NorskOffshoreAuthenticateClient
         run: dotnet build --configuration Release
 
       - name: dotnet publish
-        working-directory: ./NorskOffshoreAuthenticateClient
+        working-directory: ${{ github.workspace }}/NorskOffshoreAuthenticateClient
         run: dotnet publish -c Release -o ${{env.DOTNET_ROOT}}/onclient
 
       - name: Upload artifact for deployment job
         uses: actions/upload-artifact@v2
         with:
           name: onclient
-          working-directory: ./NorskOffshoreAuthenticateClient
+          working-directory: ${{ github.workspace }}/NorskOffshoreAuthenticateClient
           path: ${{env.DOTNET_ROOT}}/onclient
       
       # build backend API service
       - name: Build with dotnet
-        working-directory: ./NorskOffshoreAuthenticateService
+        working-directory: ${{ github.workspace }}/NorskOffshoreAuthenticateService
         run: dotnet build --configuration Release
 
       - name: dotnet publish
-        working-directory: ./NorskOffshoreAuthenticateService
+        working-directory: ${{ github.workspace }}/NorskOffshoreAuthenticateService
         run: dotnet publish -c Release -o ${{env.DOTNET_ROOT}}/onservice
 
       - name: Upload artifact for deployment job
         uses: actions/upload-artifact@v2
         with:
           name: onservice
-          working-directory: ./NorskOffshoreAuthenticateService
+          working-directory: ${{ github.workspace }}/NorskOffshoreAuthenticateService
           path: ${{env.DOTNET_ROOT}}/onservice
 
   deploy-frontend:
