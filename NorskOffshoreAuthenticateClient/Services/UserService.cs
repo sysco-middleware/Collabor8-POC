@@ -52,57 +52,6 @@ namespace NorskOffshoreAuthenticateClient.Services
                 }
             }
         }
-        public async Task<UserItem> AddAsync(UserItem todo)
-        {
-            await PrepareAuthenticatedClient();
-
-            var jsonRequest = JsonConvert.SerializeObject(todo);
-            var jsoncontent = new StringContent(jsonRequest, Encoding.UTF8, "application/json");
-            var response = await this._httpClient.PostAsync($"{ _UsersBaseAddress}api/users", jsoncontent);
-
-            if (response.StatusCode == HttpStatusCode.OK)
-            {
-                var content = await response.Content.ReadAsStringAsync();
-                todo = JsonConvert.DeserializeObject<UserItem>(content);
-
-                return todo;
-            }
-
-            throw new HttpRequestException($"Invalid status code in the HttpResponseMessage: {response.StatusCode}.");
-        }
-
-        public async Task DeleteAsync(int id)
-        {
-            await PrepareAuthenticatedClient();
-
-            var response = await _httpClient.DeleteAsync($"{ _UsersBaseAddress}api/users/{id}");
-
-            if (response.StatusCode == HttpStatusCode.OK)
-            {
-                return;
-            }
-
-            throw new HttpRequestException($"Invalid status code in the HttpResponseMessage: {response.StatusCode}.");
-        }
-
-        public async Task<UserItem> EditAsync(UserItem todo)
-        {
-            await PrepareAuthenticatedClient();
-
-            var jsonRequest = JsonConvert.SerializeObject(todo);
-            var jsoncontent = new StringContent(jsonRequest, Encoding.UTF8, "application/json-patch+json");
-            var response = await _httpClient.PatchAsync($"{ _UsersBaseAddress}api/users/{todo.Id}", jsoncontent);
-
-            if (response.StatusCode == HttpStatusCode.OK)
-            {
-                var content = await response.Content.ReadAsStringAsync();
-                todo = JsonConvert.DeserializeObject<UserItem>(content);
-
-                return todo;
-            }
-
-            throw new HttpRequestException($"Invalid status code in the HttpResponseMessage: {response.StatusCode}.");
-        }
 
         public async Task<UserItem> GetLoggedInUser()
         {
@@ -131,20 +80,6 @@ namespace NorskOffshoreAuthenticateClient.Services
             throw new HttpRequestException($"Invalid status code in the HttpResponseMessage: {response.StatusCode}.");
         }
 
-        public async Task<IEnumerable<UserItem>> GetAsync()
-        {
-            await PrepareAuthenticatedClient();
-            var response = await _httpClient.GetAsync($"{ _UsersBaseAddress}api/users");
-            if (response.StatusCode == HttpStatusCode.OK)
-            {
-                var content = await response.Content.ReadAsStringAsync();
-                IEnumerable<UserItem> users = JsonConvert.DeserializeObject<IEnumerable<UserItem>>(content);
-
-                return users;
-            }
-
-            throw new HttpRequestException($"Invalid status code in the HttpResponseMessage: {response.StatusCode}.");
-        }
         public async Task<IEnumerable<string>> GetAllGraphUsersAsync()
         {
             await PrepareAuthenticatedClient();

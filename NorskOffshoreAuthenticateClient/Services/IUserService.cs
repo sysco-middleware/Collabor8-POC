@@ -11,16 +11,11 @@ namespace NorskOffshoreAuthenticateClient.Services
 {
     public interface IUserService
     {
-        Task<IEnumerable<UserItem>> GetAsync();
+
 
         Task<UserItem> GetAsync(int id);
         Task<IEnumerable<string>> GetAllGraphUsersAsync();
         Task<UserItem> GetLoggedInUser();
-        Task DeleteAsync(int id);
-
-        Task<UserItem> AddAsync(UserItem todo);
-
-        Task<UserItem> EditAsync(UserItem todo);
 
     }
 }

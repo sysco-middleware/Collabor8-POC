@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 
 namespace NorskOffshoreAuthenticateClient.Utils
 {
-    public class WebApiMsalUiRequiredException:Exception
+    public class WebApiMsalUiRequiredException : Exception
     {
         public WebApiMsalUiRequiredException(string message) : base(message) { }
     }

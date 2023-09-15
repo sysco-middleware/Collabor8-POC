@@ -1,10 +1,16 @@
 ﻿@using Microsoft.Identity.Web;
 @if (User.Identity.IsAuthenticated)
 {
-    <ul class="nav navbar-nav navbar-right">
-        <li class="nav-item">Hello @User.GetDisplayName()!</li>
-        <li class="nav-item"><a asp-area="MicrosoftIdentity" asp-controller="Account" asp-action="SignOut">Sign Out</a></li>
-    </ul>
+    <div class="navbar-collapse collapse d-sm-inline-flex flex-sm-row-reverse">
+        <ul class="navbar-nav ml-auto">
+            <li class="nav-item">
+                <p class="nav-link">Hello @User.GetDisplayName()!</p>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" asp-area="MicrosoftIdentity" asp-controller="Account" asp-action="SignOut">Sign Out</a>
+            </li>
+        </ul>
+    </div>
 }
 else
 {
