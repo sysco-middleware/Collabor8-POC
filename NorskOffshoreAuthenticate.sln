@@ -6,6 +6,12 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NorskOffshoreAuthenticateCl
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NorskOffshoreAuthenticateService", "NorskOffshoreAuthenticateService\NorskOffshoreAuthenticateService.csproj", "{F6AA7AF4-A64C-42B6-BDE4-3E1A49FE4207}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Test", "Test", "{97B261A6-96F1-4C00-A11F-DD00FD15C4B7}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AuthenticateService-IntegrationTests", "AuthenticateService-IntegrationTests\AuthenticateService-IntegrationTests.csproj", "{DB47960E-04F4-439B-A1AD-AC8B9AE5AF9C}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NOA.Common.DI.Backend", "NOA.Common.DI.Backend\NOA.Common.DI.Backend.csproj", "{4F72AF4A-957C-48ED-96F8-0B8348A80D56}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -20,9 +26,20 @@ Global
 		{F6AA7AF4-A64C-42B6-BDE4-3E1A49FE4207}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{F6AA7AF4-A64C-42B6-BDE4-3E1A49FE4207}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{F6AA7AF4-A64C-42B6-BDE4-3E1A49FE4207}.Release|Any CPU.Build.0 = Release|Any CPU
+		{DB47960E-04F4-439B-A1AD-AC8B9AE5AF9C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DB47960E-04F4-439B-A1AD-AC8B9AE5AF9C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DB47960E-04F4-439B-A1AD-AC8B9AE5AF9C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{DB47960E-04F4-439B-A1AD-AC8B9AE5AF9C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4F72AF4A-957C-48ED-96F8-0B8348A80D56}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4F72AF4A-957C-48ED-96F8-0B8348A80D56}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4F72AF4A-957C-48ED-96F8-0B8348A80D56}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4F72AF4A-957C-48ED-96F8-0B8348A80D56}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{DB47960E-04F4-439B-A1AD-AC8B9AE5AF9C} = {97B261A6-96F1-4C00-A11F-DD00FD15C4B7}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {7B46628B-2278-4F5A-8172-E8635DDD9E65}

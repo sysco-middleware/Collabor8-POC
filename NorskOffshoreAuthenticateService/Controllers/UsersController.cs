@@ -24,14 +24,12 @@ namespace NorskOffshoreAuthenticateService.Controllers
     [ApiController]
     public class UsersController : ControllerBase
     {
-        private readonly UserContext _context;
         private readonly ITokenAcquisition _tokenAcquisition;
         private readonly string[] _graphScopes;
         private readonly MicrosoftIdentityConsentAndConditionalAccessHandler _consentHandler;
         private readonly GraphServiceClient _graphServiceClient;
         private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly string _userTenantId;
-        private readonly string _signedInUser;
 
         private const string _usersReadScope = "ToDoList.Read";
         private const string _usersReadWriteScope = "ToDoList.ReadWrite";
@@ -39,28 +37,41 @@ namespace NorskOffshoreAuthenticateService.Controllers
         private const string _usersReadWriteAllPermission = "ToDoList.ReadWrite.All";
 
         public UsersController(
-            UserContext context, 
             ITokenAcquisition tokenAcquisition, 
             IConfiguration configuration, 
-            IHttpContextAccessor httpContextAccessor)
+            IHttpContextAccessor httpContextAccessor,
+            GraphServiceClient graphServiceClient,
+            MicrosoftIdentityConsentAndConditionalAccessHandler consentHandler)
         {
-            _context = context;
             _tokenAcquisition = tokenAcquisition;
             _graphScopes = configuration.GetValue<string>("DownstreamApi:Scopes")?.Split(' ');
             _httpContextAccessor = httpContextAccessor;
 
             var services = _httpContextAccessor.HttpContext?.RequestServices;
 
-            this._graphServiceClient = (GraphServiceClient)services?.GetService(typeof(GraphServiceClient));
+            this._graphServiceClient = graphServiceClient; //(GraphServiceClient)services?.GetService(typeof(GraphServiceClient));
             if (this._graphServiceClient == null) throw new NullReferenceException("The GraphServiceClient has not been added to the services collection during the ConfigureServices()");
 
-            this._consentHandler = (MicrosoftIdentityConsentAndConditionalAccessHandler)services?.GetService(typeof(MicrosoftIdentityConsentAndConditionalAccessHandler));
+            this._consentHandler = consentHandler;
             if (this._consentHandler == null) throw new NullReferenceException("The MicrosoftIdentityConsentAndConditionalAccessHandler has not been added to the services collection during the ConfigureServices()");
 
             _userTenantId = _httpContextAccessor.HttpContext?.User.GetTenantId();
-            _signedInUser = _httpContextAccessor.HttpContext?.User.GetDisplayName();
         }
 
+        [HttpPost("authenticateuser")]
+        [RequiredScopeOrAppPermission(
+            AcceptedScope = new string[] { _usersReadScope, _usersReadWriteScope },
+            AcceptedAppPermission = new string[] { _usersReadAllPermission, _usersReadWriteAllPermission })]
+        public async Task<ActionResult<bool>> AuthenticateUser(string userMail)
+        {
+            throw new NotImplementedException();
+        }
+
+        [HttpGet("getuserstatus")]
+        public async Task<ActionResult<UserStatus>> GetUserStatus(string userMail)
+        {
+            throw new NotImplementedException();
+        }
 
         [HttpGet("getloggedingraphuser")]
         [RequiredScopeOrAppPermission(
@@ -156,15 +167,15 @@ namespace NorskOffshoreAuthenticateService.Controllers
             catch (MsalUiRequiredException ex)
             {
                 _tokenAcquisition.ReplyForbiddenWithWwwAuthenticateHeader(_graphScopes, ex);
-                throw ex;
+                throw;
             }
             catch (MicrosoftIdentityWebChallengeUserException ex)
             {
-                throw ex;
+                throw;
             }
             catch (Exception ex)
             {
-                throw ex;
+                throw;
             }
         }
 
