@@ -10,7 +10,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  build-frontend:
+  build:
     runs-on: ubuntu-latest
 
     steps:
@@ -22,6 +22,7 @@ jobs:
           dotnet-version: '7.x'
           include-prerelease: true
 
+      # build frontend client
       - name: Build with dotnet
         working-directory: ./NorskOffshoreAuthenticateClient
         run: dotnet build --configuration Release
@@ -36,6 +37,22 @@ jobs:
           name: onclient
           working-directory: ./NorskOffshoreAuthenticateClient
           path: ${{env.DOTNET_ROOT}}/onclient
+      
+      # build backend API service
+      - name: Build with dotnet
+        working-directory: ./NorskOffshoreAuthenticateService
+        run: dotnet build --configuration Release
+
+      - name: dotnet publish
+        working-directory: ./NorskOffshoreAuthenticateService
+        run: dotnet publish -c Release -o ${{env.DOTNET_ROOT}}/onservice
+
+      - name: Upload artifact for deployment job
+        uses: actions/upload-artifact@v2
+        with:
+          name: onservice
+          working-directory: ./NorskOffshoreAuthenticateService
+          path: ${{env.DOTNET_ROOT}}/onservice
 
   deploy-frontend:
     runs-on: ubuntu-latest
@@ -58,34 +75,6 @@ jobs:
           slot-name: 'Production'
           publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_AF6D0AF4FE264CB8A49A73400BB3E867 }}
           package: .
-
-
-  build-backend:
-    runs-on: ubuntu-latest
-
-    steps:
-      - uses: actions/checkout@v2
-
-      - name: Set up .NET Core
-        uses: actions/setup-dotnet@v1
-        with:
-          dotnet-version: '7.x'
-          include-prerelease: true
-
-      - name: Build with dotnet
-        working-directory: ./NorskOffshoreAuthenticateService
-        run: dotnet build --configuration Release
-
-      - name: dotnet publish
-        working-directory: ./NorskOffshoreAuthenticateService
-        run: dotnet publish -c Release -o ${{env.DOTNET_ROOT}}/onservice
-
-      - name: Upload artifact for deployment job
-        uses: actions/upload-artifact@v2
-        with:
-          name: onservice
-          working-directory: ./NorskOffshoreAuthenticateService
-          path: ${{env.DOTNET_ROOT}}/onservice
 
   deploy-backend:
     runs-on: ubuntu-latest
