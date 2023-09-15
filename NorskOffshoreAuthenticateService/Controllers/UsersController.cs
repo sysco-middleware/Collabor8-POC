@@ -38,82 +38,29 @@ namespace NorskOffshoreAuthenticateService.Controllers
         private const string _usersReadAllPermission = "ToDoList.Read.All";
         private const string _usersReadWriteAllPermission = "ToDoList.ReadWrite.All";
 
-        public UsersController(UserContext context, ITokenAcquisition tokenAcquisition, IConfiguration configuration, IHttpContextAccessor httpContextAccessor)
+        public UsersController(
+            UserContext context, 
+            ITokenAcquisition tokenAcquisition, 
+            IConfiguration configuration, 
+            IHttpContextAccessor httpContextAccessor)
         {
             _context = context;
             _tokenAcquisition = tokenAcquisition;
             _graphScopes = configuration.GetValue<string>("DownstreamApi:Scopes")?.Split(' ');
             _httpContextAccessor = httpContextAccessor;
 
-            var services = _httpContextAccessor.HttpContext.RequestServices;
+            var services = _httpContextAccessor.HttpContext?.RequestServices;
 
-            this._graphServiceClient = (GraphServiceClient)services.GetService(typeof(GraphServiceClient));
+            this._graphServiceClient = (GraphServiceClient)services?.GetService(typeof(GraphServiceClient));
             if (this._graphServiceClient == null) throw new NullReferenceException("The GraphServiceClient has not been added to the services collection during the ConfigureServices()");
 
-            this._consentHandler = (MicrosoftIdentityConsentAndConditionalAccessHandler)services.GetService(typeof(MicrosoftIdentityConsentAndConditionalAccessHandler));
+            this._consentHandler = (MicrosoftIdentityConsentAndConditionalAccessHandler)services?.GetService(typeof(MicrosoftIdentityConsentAndConditionalAccessHandler));
             if (this._consentHandler == null) throw new NullReferenceException("The MicrosoftIdentityConsentAndConditionalAccessHandler has not been added to the services collection during the ConfigureServices()");
 
-            _userTenantId = _httpContextAccessor.HttpContext.User.GetTenantId();
-            _signedInUser = _httpContextAccessor.HttpContext.User.GetDisplayName();
+            _userTenantId = _httpContextAccessor.HttpContext?.User.GetTenantId();
+            _signedInUser = _httpContextAccessor.HttpContext?.User.GetDisplayName();
         }
 
-        // GET: api/UserItems
-        [HttpGet]
-        [RequiredScopeOrAppPermission(
-            AcceptedScope = new string[] { _usersReadScope, _usersReadWriteScope },
-            AcceptedAppPermission = new string[] { _usersReadAllPermission, _usersReadWriteAllPermission }
-            )]
-        public async Task<ActionResult<IEnumerable<UserItem>>> GetUserItems()
-        {
-            try
-            {
-                // this is a request for all ToDo list items of a certain user.
-                if (!IsAppOnlyToken())
-                {
-                    return await _context.UserItems.Where(x => x.TenantId == _userTenantId && (x.Email == _signedInUser)).ToArrayAsync();
-                }
-
-                // Its an app calling with app permissions, so return all items across all users
-                return await _context.UserItems.Where(x => x.TenantId == _userTenantId).ToArrayAsync();
-            }
-            catch (Exception)
-            {
-                throw;
-            }
-        }
-
-        // GET: api/UserItem/5
-        [HttpGet("{id}")]
-        [RequiredScopeOrAppPermission(
-            AcceptedScope = new string[] { _usersReadScope, _usersReadWriteScope },
-            AcceptedAppPermission = new string[] { _usersReadAllPermission, _usersReadWriteAllPermission })]
-        public async Task<ActionResult<UserItem>> GetUserItem(string id)
-        {
-            try
-            {
-                UserItem todoItem;
-
-                if (!IsAppOnlyToken())
-                {
-                    todoItem = (await _context.UserItems.WhereAsync(x => x.TenantId == _userTenantId && x.Id == id && (x.Email == _signedInUser))).FirstOrDefault();
-                }
-                else
-                {
-                    todoItem = (await _context.UserItems.WhereAsync(x => x.TenantId == _userTenantId && x.Id == id)).FirstOrDefault();
-                }
-
-                if (todoItem == null)
-                {
-                    return NotFound();
-                }
-
-                return todoItem;
-            }
-            catch (Exception)
-            {
-                throw;
-            }
-        }
 
         [HttpGet("getloggedingraphuser")]
         [RequiredScopeOrAppPermission(
@@ -166,92 +113,8 @@ namespace NorskOffshoreAuthenticateService.Controllers
 
             return null;
         }
-        // PUT: api/UserItems/5
-        // To protect from overposting attacks, please enable the specific properties you want to bind to, for
-        // more details see https://aka.ms/RazorPagesCRUD.
-        [HttpPatch("{id}")]
-        [RequiredScopeOrAppPermission(
-            AcceptedScope = new string[] { _usersReadWriteScope },
-            AcceptedAppPermission = new string[] { _usersReadWriteAllPermission })]
-        public async Task<IActionResult> UpdateUserItem(string id, UserItem todoItem)
-        {
-            if (id != todoItem.Id)
-            {
-                return BadRequest();
-            }            
 
-            try
-            {
-                if (
-                    //non application call and the user is (assigned and/or assigned)
-                    (!IsAppOnlyToken() && todoItem.Email == _signedInUser) 
-                    
-                    //application call
-                    || IsAppOnlyToken()
-                )
-                {
-                    _context.Entry(todoItem).State = EntityState.Modified;
-                    await _context.SaveChangesAsync();
-                } else 
-                {
-                    return Unauthorized("Only assigned user, ToDo Item assignee or an application with 'Write' permission are authorized to modify their ToDo Items");
-                }
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!IsTodoItemExists(id))
-                {
-                    return NotFound();
-                }
-                else
-                {
-                    throw;
-                }
-            }
-
-            return Ok(todoItem);
-        }
-
-        // POST: api/UserItems
-        // To protect from overposting attacks, please enable the specific properties you want to bind to, for
-        // more details see https://aka.ms/RazorPagesCRUD.
-        [HttpPost]
-        [RequiredScopeOrAppPermission(
-            AcceptedScope = new string[] { _usersReadWriteScope },
-            AcceptedAppPermission = new string[] { _usersReadWriteAllPermission })]
-        public async Task<ActionResult<UserItem>> SaveUserItem(UserItem item)
-        {
-            _context.UserItems.Add(item);
-            await _context.SaveChangesAsync();
-
-            return Ok(item);
-        }
-
-        // DELETE: api/UsertItems/5
-        [HttpDelete("{id}")]
-        [RequiredScopeOrAppPermission(
-            AcceptedScope = new string[] { _usersReadWriteScope },
-            AcceptedAppPermission = new string[] { _usersReadWriteAllPermission })]
-        public async Task<ActionResult<UserItem>> DeleteUserItem(int id)
-        {
-            var todoItem = await _context.UserItems.FindAsync(id);
-            if (todoItem == null)
-            {
-                return NotFound();
-            }
-
-            _context.UserItems.Remove(todoItem);
-            await _context.SaveChangesAsync();
-
-            return todoItem;
-        }
-
-        private bool IsTodoItemExists(string id)
-        {
-            return _context.UserItems.Any(e => e.Id == id);
-        }
-
-        private async Task<User> GetGraphApiUser(string objectId)
+        private async Task<User> GetGraphApiUser(string userObjectId)
         {
             // we use MSAL.NET to get a token to call the API On Behalf Of the current user
             try
@@ -265,7 +128,7 @@ namespace NorskOffshoreAuthenticateService.Controllers
                             {
                                 return await _graphServiceClient.Users.GetAsync(r =>
                                     {
-                                        r.QueryParameters.Filter = $"accountEnabled eq true and id eq '{objectId}'";
+                                        r.QueryParameters.Filter = $"accountEnabled eq true and id eq '{userObjectId}'";
                                         r.QueryParameters.Select = new string[]
                                         {
                                             "id", "userPrincipalName", "displayName", "givenName", "accountEnabled",
