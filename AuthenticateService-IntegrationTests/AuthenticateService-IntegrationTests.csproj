@@ -27,7 +27,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\NOA.Common.DI.Backend\NOA.Common.DI.Backend.csproj" />
-    <ProjectReference Include="..\NOA.Common.DI\NOA.Common.DI.Backend.csproj" />
+    <ProjectReference Include="..\NOA.Common.Service\NOA.Common.Service.csproj" />
     <ProjectReference Include="..\NorskOffshoreAuthenticateService\NorskOffshoreAuthenticateService.csproj" />
   </ItemGroup>
 

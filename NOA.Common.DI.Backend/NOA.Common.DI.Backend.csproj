@@ -23,4 +23,8 @@
     <PackageReference Include="Microsoft.Identity.Web.TokenCache" Version="2.13.4" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\NOA.Common.Service\NOA.Common.Service.csproj" />
+  </ItemGroup>
+
 </Project>

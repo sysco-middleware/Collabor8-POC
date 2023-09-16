@@ -9,6 +9,7 @@ using Microsoft.Identity.Web;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Hosting;
+using Microsoft.AspNetCore.Authentication;
 
 namespace NOA.Common.DI.Backend
 {
@@ -78,6 +79,10 @@ namespace NOA.Common.DI.Backend
             _serviceCollection
                 .AddServerSideBlazor()
                 .AddMicrosoftIdentityConsentHandler();
+
+            var clientId = _configuration.GetSection("AzureAd:ClientId").Get<string>() ?? String.Empty;
+            _serviceCollection
+                .AddTransient<Service.IAuthenticationService>(_ => new Service.AuthenticationService(clientId));
         }
 
         public ServiceProvider GetServiceProvider()

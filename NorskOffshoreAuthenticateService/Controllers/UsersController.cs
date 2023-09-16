@@ -15,7 +15,7 @@ using System.Net;
 using Microsoft.Extensions.Configuration;
 using System.Security.Claims;
 using Microsoft.Graph.Models;
-using NorskOffshoreAuthenticateService.Extensions;
+using NOA.Common.Service;
 
 namespace NorskOffshoreAuthenticateService.Controllers
 {
@@ -29,6 +29,7 @@ namespace NorskOffshoreAuthenticateService.Controllers
         private readonly MicrosoftIdentityConsentAndConditionalAccessHandler _consentHandler;
         private readonly GraphServiceClient _graphServiceClient;
         private readonly IHttpContextAccessor _httpContextAccessor;
+        private readonly IAuthenticationService _authService;
         private readonly string _userTenantId;
 
         private const string _usersReadScope = "ToDoList.Read";
@@ -41,21 +42,23 @@ namespace NorskOffshoreAuthenticateService.Controllers
             IConfiguration configuration, 
             IHttpContextAccessor httpContextAccessor,
             GraphServiceClient graphServiceClient,
-            MicrosoftIdentityConsentAndConditionalAccessHandler consentHandler)
+            MicrosoftIdentityConsentAndConditionalAccessHandler consentHandler,
+            IAuthenticationService authService)
         {
             _tokenAcquisition = tokenAcquisition;
             _graphScopes = configuration.GetValue<string>("DownstreamApi:Scopes")?.Split(' ');
             _httpContextAccessor = httpContextAccessor;
 
-            var services = _httpContextAccessor.HttpContext?.RequestServices;
-
-            this._graphServiceClient = graphServiceClient; //(GraphServiceClient)services?.GetService(typeof(GraphServiceClient));
-            if (this._graphServiceClient == null) throw new NullReferenceException("The GraphServiceClient has not been added to the services collection during the ConfigureServices()");
+            this._graphServiceClient = graphServiceClient; 
+            if (this._graphServiceClient == null) 
+                throw new NullReferenceException("The GraphServiceClient has not been added to the services collection during the ConfigureServices()");
 
             this._consentHandler = consentHandler;
-            if (this._consentHandler == null) throw new NullReferenceException("The MicrosoftIdentityConsentAndConditionalAccessHandler has not been added to the services collection during the ConfigureServices()");
+            if (this._consentHandler == null) 
+                throw new NullReferenceException("The MicrosoftIdentityConsentAndConditionalAccessHandler has not been added to the services collection during the ConfigureServices()");
 
             _userTenantId = _httpContextAccessor.HttpContext?.User.GetTenantId();
+            _authService = authService;
         }
 
         [HttpPost("authenticateuser")]
@@ -64,13 +67,29 @@ namespace NorskOffshoreAuthenticateService.Controllers
             AcceptedAppPermission = new string[] { _usersReadAllPermission, _usersReadWriteAllPermission })]
         public async Task<ActionResult<bool>> AuthenticateUser(string userMail)
         {
-            throw new NotImplementedException();
+            var filter =
+                $"mail eq '{userMail}'";
+            var user = await GetGraphApiUser(filter);
+            if (user != null)
+            {
+                var scopes = new string[] { _usersReadScope, _usersReadWriteScope };
+                var token = await _authService.GetTokenForUserAsync(scopes, user.UserPrincipalName);
+                return !String.IsNullOrEmpty(token);
+            }
+            return false;
         }
 
         [HttpGet("getuserstatus")]
         public async Task<ActionResult<UserStatus>> GetUserStatus(string userMail)
         {
-            throw new NotImplementedException();
+            var filter =
+                $"mail eq '{userMail}'";
+            var user = await GetGraphApiUser(filter);
+            if (user != null)
+            {
+                return UserStatus.Existing;
+            }
+            return UserStatus.Missing;
         }
 
         [HttpGet("getloggedingraphuser")]
@@ -81,7 +100,9 @@ namespace NorskOffshoreAuthenticateService.Controllers
         {
             try
             {
-                var user = await GetGraphApiUser(_httpContextAccessor.HttpContext?.User.GetObjectId());
+                var filter =
+                    $"accountEnabled eq true and id eq '{_httpContextAccessor.HttpContext?.User.GetObjectId()}'";
+                var user = await GetGraphApiUser(filter);
                 return user;
             }
             catch (MsalUiRequiredException ex)
@@ -112,7 +133,7 @@ namespace NorskOffshoreAuthenticateService.Controllers
         {
             try
             {
-                List<string> users = await CallGraphApiOnBehalfOfUser();
+                List<string> users = await GetAllGraphApiUsers();
                 return users;
             }
             catch (MsalUiRequiredException ex)
@@ -125,7 +146,7 @@ namespace NorskOffshoreAuthenticateService.Controllers
             return null;
         }
 
-        private async Task<User> GetGraphApiUser(string userObjectId)
+        private async Task<User> GetGraphApiUser(string filter)
         {
             // we use MSAL.NET to get a token to call the API On Behalf Of the current user
             try
@@ -139,12 +160,13 @@ namespace NorskOffshoreAuthenticateService.Controllers
                             {
                                 return await _graphServiceClient.Users.GetAsync(r =>
                                     {
-                                        r.QueryParameters.Filter = $"accountEnabled eq true and id eq '{userObjectId}'";
+                                        r.QueryParameters.Filter = filter;
                                         r.QueryParameters.Select = new string[]
                                         {
-                                            "id", "userPrincipalName", "displayName", "givenName", "accountEnabled",
-                                            "mail",
-                                            "mobilePhone", "country", "streetAddress", "photo"
+                                            "id", "userPrincipalName", "displayName", 
+                                            "givenName", "accountEnabled", "mail",
+                                            "mobilePhone", "country", "streetAddress", 
+                                            "photo"
                                         };
 
                                     }
@@ -152,7 +174,7 @@ namespace NorskOffshoreAuthenticateService.Controllers
                             }
                             catch(Exception ex)
                             {
-                                throw ex;
+                                throw;
                             }
                         }
                     );
@@ -179,9 +201,9 @@ namespace NorskOffshoreAuthenticateService.Controllers
             }
         }
 
-        private async Task<List<string>> CallGraphApiOnBehalfOfUser()
+        private async Task<List<string>> GetAllGraphApiUsers()
         {
-            // we use MSAL.NET to get a token to call the API On Behalf Of the current user
+            // We use MSAL.NET to get a token to call the API On Behalf Of the current user
             try
             {
                 // Call the Graph API and retrieve the user's profile.
@@ -203,7 +225,7 @@ namespace NorskOffshoreAuthenticateService.Controllers
                 {
                     return users.Value.Select(x => x.UserPrincipalName).ToList();
                 }
-                throw new Exception();
+                throw new Exception("Got null from Microsoft Graph Api");
             }
             catch (MsalUiRequiredException ex)
             {
@@ -244,39 +266,6 @@ namespace NorskOffshoreAuthenticateService.Controllers
             }
         }
 
-        /// <summary>
-        /// Indicates of the AT presented was for an app-only token or not.
-        /// </summary>
-        /// <returns></returns>
-        private bool IsAppOnlyToken()
-        {
-            // Add in the optional 'idtyp' claim to check if the access token is coming from an application or user.
-            //
-            // See: https://docs.microsoft.com/en-us/azure/active-directory/develop/active-directory-optional-claims
 
-            if (GetCurrentClaimsPrincipal() != null)
-            {
-                return GetCurrentClaimsPrincipal().Claims.Any(c => c.Type == "idtyp" && c.Value == "app");
-            }
-
-            return false;
-        }
-
-        /// <summary>
-        /// returns the current claimsPrincipal (user/Client app) dehydrated from the Access token
-        /// </summary>
-        /// <returns></returns>
-        private ClaimsPrincipal GetCurrentClaimsPrincipal()
-        {
-            // Irrespective of whether a user signs in or not, the AspNet security middle-ware dehydrates the claims in the
-            // HttpContext.User.Claims collection
-
-            if (_httpContextAccessor.HttpContext != null && _httpContextAccessor.HttpContext.User != null)
-            {
-                return _httpContextAccessor.HttpContext.User;
-            }
-
-            return null;
-        }
     }
 }

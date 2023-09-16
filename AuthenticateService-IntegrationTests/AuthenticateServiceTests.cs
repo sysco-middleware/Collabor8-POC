@@ -4,6 +4,7 @@ using Microsoft.Graph;
 using Microsoft.Identity.Web;
 using NorskOffshoreAuthenticateService.Controllers;
 using NorskOffshoreAuthenticateService.Models;
+using NOA.Common.Service;
 using Xunit.DependencyInjection;
 
 namespace AuthenticateService_IntegrationTests
@@ -29,8 +30,9 @@ namespace AuthenticateService_IntegrationTests
             var ca = (IHttpContextAccessor) provider.GetService(typeof(IHttpContextAccessor));
             var gc = (GraphServiceClient) provider.GetService(typeof(GraphServiceClient));
             var cca = (MicrosoftIdentityConsentAndConditionalAccessHandler) provider.GetService(typeof(MicrosoftIdentityConsentAndConditionalAccessHandler));
+            var ia = (IAuthenticationService)provider.GetService(typeof(IAuthenticationService));
 
-            _usersController = new UsersController(ta, co, ca, gc, cca);
+            _usersController = new UsersController(ta, co, ca, gc, cca, ia);
         }
 
         [Fact]
@@ -85,7 +87,7 @@ namespace AuthenticateService_IntegrationTests
         }
 
         [Fact]
-        public async Task WhenQueryingUserStatus_OnExistingUser_ThenStatusSaysExists()
+        public async Task WhenQueryingUserStatus_OnExistingUser_ThenStatusSaysExisting()
         {
             /* Arrange */
             //Set user to authenticate
