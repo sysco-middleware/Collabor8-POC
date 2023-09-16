@@ -13,6 +13,7 @@ using System.Security.Claims;
 using System.Text;
 using System.Threading.Tasks;
 using Microsoft.Graph.Models;
+using NOA.Common.Constants;
 using NorskOffshoreAuthenticateClient.Models;
 using NorskOffshoreAuthenticateClient.Utils;
 
@@ -84,7 +85,7 @@ namespace NorskOffshoreAuthenticateClient.Services
             throw new HttpRequestException($"Invalid status code in the HttpResponseMessage: {response.StatusCode}.");
         }
 
-        public async Task<String> AuthenticateUser(string email)
+        public async Task<bool> AuthenticateUser(string email)
         {
             await PrepareAuthenticatedClient();
             var data = new
@@ -100,7 +101,7 @@ namespace NorskOffshoreAuthenticateClient.Services
             if (response.StatusCode == HttpStatusCode.OK)
             {
                 var content = await response.Content.ReadAsStringAsync();
-                var s = JsonConvert.DeserializeObject<string>(content);
+                var s = JsonConvert.DeserializeObject<bool>(content);
                 return s;
 
             }
@@ -111,7 +112,7 @@ namespace NorskOffshoreAuthenticateClient.Services
             throw new HttpRequestException($"Invalid status code in the HttpResponseMessage: {response.StatusCode}.");
         }
 
-        public async Task<String> GetUserStatus(string email)
+        public async Task<UserStatus> GetUserStatus(string email)
         {
             await PrepareAuthenticatedClient();
             var response = await _httpClient.GetAsync($"{_UsersBaseAddress}api/users/getuserstatus?userMail={email}");
@@ -119,7 +120,7 @@ namespace NorskOffshoreAuthenticateClient.Services
             if (response.StatusCode == HttpStatusCode.OK)
             {
                 var content = await response.Content.ReadAsStringAsync();
-                var s = JsonConvert.DeserializeObject<string>(content);
+                var s = JsonConvert.DeserializeObject<UserStatus>(content);
                 return s;
             }
             else if (response.StatusCode == HttpStatusCode.Unauthorized)

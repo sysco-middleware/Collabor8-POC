@@ -15,6 +15,7 @@ using System.Net;
 using Microsoft.Extensions.Configuration;
 using System.Security.Claims;
 using Microsoft.Graph.Models;
+using NOA.Common.Constants;
 using NOA.Common.Service;
 
 namespace NorskOffshoreAuthenticateService.Controllers

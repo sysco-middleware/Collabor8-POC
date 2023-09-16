@@ -1,5 +1,8 @@
-﻿@{
+﻿@using NOA.Common.Constants
+@{
     ViewData["Title"] = "Verify User";
+    UserStatus? userStatus = ViewData["UserStatus"] as UserStatus?;
+    string emailAddress = ViewData["EmailAddress"] as string ?? string.Empty;
 }
 
 <div class="container">
@@ -7,8 +10,32 @@
     <form method="post" action="/Users/VerifyUser">
         <div class="form-group">
             <label for="emailAddress">Email Address:</label>
-            <input type="email" class="form-control" id="emailAddress" name="emailAddress" placeholder="Enter email address" required>
+            <input type="email" class="form-control" id="emailAddress" name="emailAddress" placeholder="Enter email address" value="@emailAddress" required>
         </div>
         <button type="submit" class="btn btn-primary">Submit</button>
     </form>
+
+    @if (!userStatus.HasValue)
+    {
+        <br />
+        <div>
+            <span>Input needed</span>
+        </div>
+    }
+    else if (userStatus == UserStatus.Missing)
+    {
+        <br/>
+        <div class="green-checkmark">
+            <i style="color: red;" class="fas fa-solid fa-circle-exclamation"></i> <!-- Need FontAwesome for icons -->
+            <span>User Status: Missing</span>
+        </div>
+    }
+    else if (userStatus == UserStatus.Existing)
+    {
+        <br />
+        <div class="green-checkmark">
+            <i style="color: green;" class="fas fa-check-circle"></i> <!-- Need FontAwesome for icons -->
+            <span>User Status: Existing</span>
+        </div>
+    }
 </div>

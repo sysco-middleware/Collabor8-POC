@@ -39,17 +39,23 @@ namespace NorskOffshoreAuthenticateClient.Controllers
             }
 
             var status = await _usersService.GetUserStatus(emailAddress);
+            ViewData["UserStatus"] = status;
+            ViewData["EmailAddress"] = emailAddress;
             return View();
         }
 
-        // GET: AuthenticateUser
+        // POST: AuthenticateUser
         public async Task<ActionResult> AuthenticateUser(string emailAddress)
         {
             if (String.IsNullOrEmpty(emailAddress))
             {
                 return View();
             }
+
             var status = await _usersService.AuthenticateUser(emailAddress);
+            ViewData["IsAuthenticated"] = status;
+            ViewData["EmailAddress"] = emailAddress;
+
             return View();
         }
     }

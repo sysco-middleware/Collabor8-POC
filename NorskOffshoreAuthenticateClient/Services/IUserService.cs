@@ -6,14 +6,15 @@ using System.Threading.Tasks;
 using NorskOffshoreAuthenticateClient.Models;
 using Microsoft.Graph.Models;
 using System.Security.Claims;
+using NOA.Common.Constants;
 
 namespace NorskOffshoreAuthenticateClient.Services
 {
     public interface IUserService
     {
         Task<UserItem> GetLoggedInUser();
-        Task<String> AuthenticateUser(string email);
-        Task<String> GetUserStatus(string email);
+        Task<bool> AuthenticateUser(string email);
+        Task<UserStatus> GetUserStatus(string email);
 
     }
 }

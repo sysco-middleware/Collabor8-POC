@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Graph;
 using Microsoft.Identity.Web;
+using NOA.Common.Constants;
 using NorskOffshoreAuthenticateService.Controllers;
 using NorskOffshoreAuthenticateService.Models;
 using NOA.Common.Service;
