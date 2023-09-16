@@ -67,10 +67,9 @@ namespace NorskOffshoreAuthenticateService.Controllers
             AcceptedAppPermission = new string[] { _usersReadAllPermission, _usersReadWriteAllPermission })]
         public async Task<ActionResult<bool>> AuthenticateUser(string userMail)
         {
-            var filter =
-                $"mail eq '{userMail}'";
+            var filter = $"mail eq '{userMail}'";
             var user = await GetGraphApiUser(filter);
-            if (user != null)
+            if (user != null && !String.IsNullOrEmpty(user.UserPrincipalName))
             {
                 var scopes = new string[] { _usersReadScope, _usersReadWriteScope };
                 var token = await _authService.GetTokenForUserAsync(scopes, user.UserPrincipalName);
@@ -158,7 +157,7 @@ namespace NorskOffshoreAuthenticateService.Controllers
                         {
                             try
                             {
-                                return await _graphServiceClient.Users.GetAsync(r =>
+                                var result = await _graphServiceClient.Users.GetAsync(r =>
                                     {
                                         r.QueryParameters.Filter = filter;
                                         r.QueryParameters.Select = new string[]
@@ -171,6 +170,8 @@ namespace NorskOffshoreAuthenticateService.Controllers
 
                                     }
                                 );
+
+                                return result;
                             }
                             catch(Exception ex)
                             {

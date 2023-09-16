@@ -1,0 +1,14 @@
+﻿@{
+    ViewData["Title"] = "Authenticate";
+}
+
+<div class="container">
+    <h2>Authenticate user</h2>
+    <form method="post" action="/Users/AuthenticateUser">
+        <div class="form-group">
+            <label for="emailAddress">Email Address:</label>
+            <input type="email" class="form-control" id="emailAddress" name="emailAddress" placeholder="Enter email address" required>
+        </div>
+        <button type="submit" class="btn btn-primary">Submit</button>
+    </form>
+</div>

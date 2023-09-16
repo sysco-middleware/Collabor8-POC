@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using System;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.Identity.Web;
 using System.Collections.Generic;
@@ -27,6 +28,29 @@ namespace NorskOffshoreAuthenticateClient.Controllers
             TempData["SignedInUser"] = User.GetDisplayName();
             var listWithUser = new List<UserItem>() { await _usersService.GetLoggedInUser() };
             return View(listWithUser);
+        }
+
+        // GET: VerifyUser
+        public async Task<ActionResult> VerifyUser(string emailAddress)
+        {
+            if (String.IsNullOrEmpty(emailAddress))
+            {
+                return View();
+            }
+
+            var status = await _usersService.GetUserStatus(emailAddress);
+            return View();
+        }
+
+        // GET: AuthenticateUser
+        public async Task<ActionResult> AuthenticateUser(string emailAddress)
+        {
+            if (String.IsNullOrEmpty(emailAddress))
+            {
+                return View();
+            }
+            var status = await _usersService.AuthenticateUser(emailAddress);
+            return View();
         }
     }
 }
