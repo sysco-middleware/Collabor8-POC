@@ -6,7 +6,7 @@ name: Build and deploy ASP.Net Core app to Azure Web App - on-poc-hello-wa-01
 on:
   push:
     branches:
-      - feat-cicd
+      - main
   workflow_dispatch:
 
 jobs:
