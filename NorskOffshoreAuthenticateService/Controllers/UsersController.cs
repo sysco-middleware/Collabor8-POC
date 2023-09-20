@@ -85,6 +85,9 @@ namespace NorskOffshoreAuthenticateService.Controllers
         }
 
         [HttpGet("getuserstatus")]
+        [RequiredScopeOrAppPermission(
+            AcceptedScope = new string[] { _usersReadScope, _usersReadWriteScope },
+            AcceptedAppPermission = new string[] { _usersReadAllPermission, _usersReadWriteAllPermission })]
         public async Task<ActionResult<UserStatus>> GetUserStatus(string userMail)
         {
             if (String.IsNullOrEmpty(userMail))
