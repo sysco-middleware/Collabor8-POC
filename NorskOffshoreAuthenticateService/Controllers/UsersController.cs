@@ -68,6 +68,11 @@ namespace NorskOffshoreAuthenticateService.Controllers
             AcceptedAppPermission = new string[] { _usersReadAllPermission, _usersReadWriteAllPermission })]
         public async Task<ActionResult<bool>> AuthenticateUser(string userMail)
         {
+            if(String.IsNullOrEmpty(userMail))
+            {
+                return false;
+            }
+
             var filter = $"mail eq '{userMail}'";
             var user = await GetGraphApiUser(filter);
             if (user != null && !String.IsNullOrEmpty(user.UserPrincipalName))
@@ -82,6 +87,11 @@ namespace NorskOffshoreAuthenticateService.Controllers
         [HttpGet("getuserstatus")]
         public async Task<ActionResult<UserStatus>> GetUserStatus(string userMail)
         {
+            if (String.IsNullOrEmpty(userMail))
+            {
+                return UserStatus.Missing;
+            }
+
             var filter =
                 $"mail eq '{userMail}'";
             var user = await GetGraphApiUser(filter);

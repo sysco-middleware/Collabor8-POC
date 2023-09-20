@@ -24,6 +24,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\NOA.Common.Constants\NOA.Common.Constants.csproj" />
     <ProjectReference Include="..\NOA.Common.Service\NOA.Common.Service.csproj" />
   </ItemGroup>
 

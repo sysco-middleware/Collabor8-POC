@@ -14,7 +14,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NOA.Common.DI.Backend", "NO
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NOA.Common.Service", "NOA.Common.Service\NOA.Common.Service.csproj", "{C9D61252-0308-4ACB-80A7-F53DEEB4740D}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NOA.Common.Constants", "NOA.Common.Constants\NOA.Common.Constants.csproj", "{0D5217D4-6ECD-43BF-A2B8-3C16968DB3E6}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NOA.Common.Constants", "NOA.Common.Constants\NOA.Common.Constants.csproj", "{0D5217D4-6ECD-43BF-A2B8-3C16968DB3E6}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

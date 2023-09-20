@@ -96,7 +96,7 @@ namespace NorskOffshoreAuthenticateClient.Services
 
             var jsonContent = new StringContent(JsonConvert.SerializeObject(data), Encoding.UTF8, "application/json");
 
-            var response = await _httpClient.PostAsync($"{_UsersBaseAddress}api/users/authenticateuser", jsonContent);
+            var response = await _httpClient.PostAsync($"{_UsersBaseAddress}api/users/authenticateuser?userMail={email}", jsonContent);
 
             if (response.StatusCode == HttpStatusCode.OK)
             {

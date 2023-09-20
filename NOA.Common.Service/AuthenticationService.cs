@@ -6,8 +6,6 @@ using System;
 using System.Linq;
 using System.Net.Http.Headers;
 using System;
-using System.Diagnostics;
-using System.Net.Http.Headers;
 using System.Net.Http;
 using System.Linq;
 using System.Threading.Tasks;
@@ -15,17 +13,25 @@ using System.Security.Claims;
 using Microsoft.AspNetCore.Http;
 using System.Security.Principal;
 using Microsoft.AspNetCore.Authentication;
+using Tavis.UriTemplates;
+using NOA.Common.Service.Model;
+using Microsoft.Extensions.Options;
 
 namespace NOA.Common.Service
 {
     public class AuthenticationService : IAuthenticationService
     {
         private static IPublicClientApplication _identityClientApp;
-        private string _tokenForUser = null;
+        private static AzureAdOptions _adOptions;
 
-        public AuthenticationService(string clientId)
+        public AuthenticationService(IOptions<AzureAdOptions> adOptions)
         {
-            _identityClientApp = PublicClientApplicationBuilder.Create(clientId).Build();
+            _adOptions = adOptions.Value;
+
+            _identityClientApp = PublicClientApplicationBuilder
+                .Create(_adOptions.ClientId)
+                .WithTenantId (_adOptions.TenantId)
+                .Build();
         }
 
 
@@ -35,19 +41,26 @@ namespace NOA.Common.Service
         /// <returns>Token for user.</returns>  
         public  async Task<string> GetTokenForUserAsync(string[] scopes, string userPrincipalName)
         {
+            string _tokenForUser = null;
+
             try
             {
-                var account = _identityClientApp.GetAccountsAsync().Result.First(x => x.Username == userPrincipalName);
-                AuthenticationResult authResult = await _identityClientApp
-                    .AcquireTokenInteractive(scopes)
-                    .WithAccount(account)
-                    .WithPrompt(Prompt.SelectAccount)
-                    .ExecuteAsync();
+                var cachePopulationResult = await _identityClientApp
+                                                        .AcquireTokenInteractive(scopes)
+                                                        .ExecuteAsync();
+
+                var accounts = await _identityClientApp.GetAccountsAsync();
+                var account = accounts.FirstOrDefault(x => x.Username == userPrincipalName);
+
+                AuthenticationResult authResult = _identityClientApp
+                    .AcquireTokenSilent(scopes, account)
+                    .WithForceRefresh(true)
+                    .ExecuteAsync().Result;
 
                 _tokenForUser = authResult.AccessToken;
             }
 
-            catch (Exception)
+            catch (Exception ex)
             {
                 throw;
             }
@@ -60,9 +73,11 @@ namespace NOA.Common.Service
         /// </summary>  
         public void SignOut(string userPrincipalName)
         {
-            var user = _identityClientApp.GetAccountsAsync().Result.First(x => x.Username == userPrincipalName);
+            var user = _identityClientApp
+                .GetAccountsAsync()
+                .Result.First(x => x.Username == userPrincipalName);
+
             _identityClientApp.RemoveAsync(user);
-            _tokenForUser = null;
         }
 
         /// <summary>
