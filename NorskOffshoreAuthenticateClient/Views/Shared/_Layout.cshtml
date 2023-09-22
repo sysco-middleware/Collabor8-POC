@@ -6,6 +6,9 @@
     <title>@ViewData["Title"] - UsersClient</title>
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="~/css/site.css" />
+    <link href="~/css/fontawesome.css" rel="stylesheet">
+    <link href="~/css/brands.css" rel="stylesheet">
+    <link href="~/css/solid.css" rel="stylesheet">
 </head>
 <body>
     <header>
@@ -21,11 +24,16 @@
                         <li class="nav-item">
                             <a class="nav-link" asp-area="" asp-controller="Home" asp-action="Index">Home</a>
                         </li>
-                        <li class="nav-item">
-                            <a class="nav-link" asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" asp-area="" asp-controller="Users" asp-action="Index">User Info</a>
+                        <li class="nav-item dropdown"> <!-- Added the 'dropdown' class here -->
+                            <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                User
+                            </a>
+                            <div class="dropdown-menu" aria-labelledby="userDropdown">
+                                <a class="dropdown-item" asp-area="" asp-controller="Users" asp-action="VerifyUser">Verify</a>
+                                <a class="dropdown-item" asp-area="" asp-controller="Users" asp-action="CanAuthenticateUser">Authenticate</a>
+                                <div class="dropdown-divider"></div>
+                                <a class="dropdown-item" asp-area="" asp-controller="Users" asp-action="Index">Logged in User</a>
+                            </div>
                         </li>
                     </ul>
                 </div>

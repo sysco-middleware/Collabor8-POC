@@ -13,6 +13,7 @@ using System.Security.Claims;
 using System.Text;
 using System.Threading.Tasks;
 using Microsoft.Graph.Models;
+using NOA.Common.Constants;
 using NorskOffshoreAuthenticateClient.Models;
 using NorskOffshoreAuthenticateClient.Utils;
 
@@ -77,41 +78,58 @@ namespace NorskOffshoreAuthenticateClient.Services
                     Photo = user.Photo
                 };
             }
+            else if (response.StatusCode == HttpStatusCode.Unauthorized)
+            {
+                HandleChallengeFromWebApi(response);
+            }
             throw new HttpRequestException($"Invalid status code in the HttpResponseMessage: {response.StatusCode}.");
         }
 
-        public async Task<IEnumerable<string>> GetAllGraphUsersAsync()
+        public async Task<bool> CanAuthenticateUser(string email)
         {
             await PrepareAuthenticatedClient();
-            var response = await _httpClient.GetAsync($"{ _UsersBaseAddress}api/users/getallgraphusers");
+            var data = new
+            {
+                userMail = email
+                // Add other properties as needed
+            };
+
+            var jsonContent = new StringContent(JsonConvert.SerializeObject(data), Encoding.UTF8, "application/json");
+
+            var response = await _httpClient.PostAsync($"{_UsersBaseAddress}api/users/CanAuthenticateUser?userMail={email}", jsonContent);
+
             if (response.StatusCode == HttpStatusCode.OK)
             {
                 var content = await response.Content.ReadAsStringAsync();
-                IEnumerable<string> users = JsonConvert.DeserializeObject<IEnumerable<string>>(content);
-                return users;
+                var s = JsonConvert.DeserializeObject<bool>(content);
+                return s;
+
             }
             else if (response.StatusCode == HttpStatusCode.Unauthorized)
             {
-                 HandleChallengeFromWebApi(response);
+                HandleChallengeFromWebApi(response);
             }
-
             throw new HttpRequestException($"Invalid status code in the HttpResponseMessage: {response.StatusCode}.");
         }
 
-        public async Task<UserItem> GetAsync(int id)
+        public async Task<UserStatus> GetUserStatus(string email)
         {
             await PrepareAuthenticatedClient();
-            var response = await _httpClient.GetAsync($"{ _UsersBaseAddress}api/users/{id}");
+            var response = await _httpClient.GetAsync($"{_UsersBaseAddress}api/users/getuserstatus?userMail={email}");
+
             if (response.StatusCode == HttpStatusCode.OK)
             {
                 var content = await response.Content.ReadAsStringAsync();
-                UserItem todo = JsonConvert.DeserializeObject<UserItem>(content);
-
-                return todo;
+                var s = JsonConvert.DeserializeObject<UserStatus>(content);
+                return s;
             }
-
+            else if (response.StatusCode == HttpStatusCode.Unauthorized)
+            {
+                HandleChallengeFromWebApi(response);
+            }
             throw new HttpRequestException($"Invalid status code in the HttpResponseMessage: {response.StatusCode}.");
         }
+
 
         private async Task PrepareAuthenticatedClient()
         {
