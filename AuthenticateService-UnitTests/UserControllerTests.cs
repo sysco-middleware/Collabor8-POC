@@ -14,23 +14,16 @@ using Microsoft.Graph.Models;
 
 namespace AuthenticateService_IntegrationTests
 {
-    public class AuthenticateServiceTests
+    public class UserControllerTests
     {
         private UsersController UsersController { get; set; }
         private string userMail_existing = "existing_tom@corporation.org";
         private string userMail_missing = "missing_jonas@corporation.org";
-        public AuthenticateServiceTests()
+        public UserControllerTests()
         {
             /* Arrange */
-            //Set up AuthenticateService for testing
-
             var provider = Startup.StartupContainer.GetServiceProvider();
 
-            /*
-             * ITokenAcquisition tokenAcquisition, 
-             * IConfiguration configuration, 
-             * IHttpContextAccessor httpContextAccessor
-             */
             var ca = (IHttpContextAccessor)provider.GetService(typeof(IHttpContextAccessor));
             var ia = new Mock<IAuthenticationService>();
 
