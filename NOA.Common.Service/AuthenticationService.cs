@@ -24,13 +24,15 @@ namespace NOA.Common.Service
 {
     public class AuthenticationService : IAuthenticationService
     {
-        private ILogger _logger;
+        private ILogger<AuthenticationService> _logger;
         private readonly ITokenAcquisition _tokenAcquisition;
         private static IPublicClientApplication _identityClientApp;
         private static AzureAdOptions _adOptions;
 
-        public AuthenticationService(IOptions<AzureAdOptions> adOptions, ITokenAcquisition tokenAcquisition, ILogger logger)
+        public AuthenticationService(IOptions<AzureAdOptions> adOptions, ITokenAcquisition tokenAcquisition, ILogger<AuthenticationService> logger)
         {
+            _logger = logger;
+
             _tokenAcquisition = tokenAcquisition;
             _adOptions = adOptions.Value;
 

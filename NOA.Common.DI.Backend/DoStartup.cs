@@ -50,8 +50,6 @@ namespace NOA.Common.DI.Backend
                 .AddMicrosoftGraph(downstreamApi)
                 .AddInMemoryTokenCaches();
 
-            _serviceCollection.AddLogging();
-
             var allowedTenants = _configuration.GetSection("AzureAd:AllowedTenants").Get<string[]>();
 
             _serviceCollection.Configure<JwtBearerOptions>(
@@ -90,6 +88,7 @@ namespace NOA.Common.DI.Backend
             var adOptionsSection = _configuration.GetSection(ConfigConstants.AzureAdOptions);
             _serviceCollection
                 .Configure<AzureAdOptions>(opt => adOptionsSection.Bind(opt))
+                .AddLogging()
                 .AddTransient<IGraphServiceProxy, GraphServiceProxy>()
                 .AddTransient<Service.IAuthenticationService, Service.AuthenticationService>();
         }
