@@ -11,6 +11,10 @@ using Microsoft.Kiota.Abstractions.Authentication;
 using Moq;
 using System.Linq.Expressions;
 using Microsoft.Graph.Models;
+using Microsoft.CodeAnalysis.Options;
+using NOA.Common.Service.Model;
+using Microsoft.Extensions.Options;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace AuthenticateService_IntegrationTests
 {
@@ -24,6 +28,7 @@ namespace AuthenticateService_IntegrationTests
             /* Arrange */
             var provider = Startup.StartupContainer.GetServiceProvider();
 
+            var op = provider.GetRequiredService<IOptions<UsersConnectionModel>>();
             var ca = (IHttpContextAccessor)provider.GetService(typeof(IHttpContextAccessor));
             var ia = new Mock<IAuthenticationService>();
 
@@ -41,7 +46,7 @@ namespace AuthenticateService_IntegrationTests
 
             //gp.Setup(x => x.GetGraphApiUser($"mail eq '{userMail_missing}'")).ReturnsAsync(null);
 
-            UsersController = new UsersController(gp.Object, ca, ia.Object);
+            UsersController = new UsersController(op, gp.Object, ca, ia.Object);
         }
 
         [Fact]

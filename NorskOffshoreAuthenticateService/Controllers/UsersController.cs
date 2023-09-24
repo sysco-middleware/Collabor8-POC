@@ -17,6 +17,8 @@ using System.Security.Claims;
 using Microsoft.Graph.Models;
 using NOA.Common.Constants;
 using NOA.Common.Service;
+using Microsoft.Extensions.Options;
+using NOA.Common.Service.Model;
 
 namespace NorskOffshoreAuthenticateService.Controllers
 {
@@ -28,6 +30,7 @@ namespace NorskOffshoreAuthenticateService.Controllers
         private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly IAuthenticationService _authService;
         private readonly IGraphServiceProxy _graphServiceProxy;
+        private readonly UsersConnectionModel _usersConnectionModel;
 
         private const string _usersReadScope = "ToDoList.Read";
         private const string _usersReadWriteScope = "ToDoList.ReadWrite";
@@ -35,6 +38,7 @@ namespace NorskOffshoreAuthenticateService.Controllers
         private const string _usersReadWriteAllPermission = "ToDoList.ReadWrite.All";
 
         public UsersController(
+            IOptions<UsersConnectionModel> usersConnectionModel,
             IGraphServiceProxy graphServiceProxy,
             IHttpContextAccessor httpContextAccessor,
             IAuthenticationService authService)
@@ -42,6 +46,7 @@ namespace NorskOffshoreAuthenticateService.Controllers
             _graphServiceProxy = graphServiceProxy;
             _httpContextAccessor = httpContextAccessor;
             _authService = authService;
+            _usersConnectionModel = usersConnectionModel.Value;
         }
 
         [HttpPost("CanAuthenticateUser")]
@@ -59,7 +64,7 @@ namespace NorskOffshoreAuthenticateService.Controllers
             var user = await _graphServiceProxy.GetGraphApiUser(filter);
             if (user != null && !String.IsNullOrEmpty(user.UserPrincipalName))
             {
-                var scopes = new string[] { _usersReadScope, _usersReadWriteScope };
+                var scopes = new string[] { _usersConnectionModel.NorskOffshoreAuthenticateServiceScope };
                 var token = await _authService.GetTokenForUserAsync(scopes, user.UserPrincipalName);
                 return !String.IsNullOrEmpty(token);
             }
@@ -79,6 +84,7 @@ namespace NorskOffshoreAuthenticateService.Controllers
 
             var filter =
                 $"mail eq '{userMail}'";
+
             var user = await _graphServiceProxy.GetGraphApiUser(filter);
             if (user != null)
             {
@@ -97,6 +103,7 @@ namespace NorskOffshoreAuthenticateService.Controllers
             {
                 var filter =
                     $"accountEnabled eq true and id eq '{_httpContextAccessor.HttpContext?.User.GetObjectId()}'";
+
                 var user = await _graphServiceProxy.GetGraphApiUser(filter);
                 return user;
             }

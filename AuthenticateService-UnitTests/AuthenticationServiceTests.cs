@@ -12,17 +12,22 @@ using Moq;
 using System.Linq.Expressions;
 using Microsoft.Graph.Models;
 using System.Security.Claims;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Options;
+using NOA.Common.Service.Model;
 
 namespace AuthenticateService_IntegrationTests
 {
     public class AuthenticationServiceTests
     {
         private IAuthenticationService AuthenticationService { get; set; }
+        private UsersConnectionModel UsersConnectionModel { get; set; }
 
         public AuthenticationServiceTests()
         {
             /* Arrange */
-            var provider = Startup.StartupContainer.GetServiceProvider();           
+            var provider = Startup.StartupContainer.GetServiceProvider();
+            UsersConnectionModel = provider.GetRequiredService<IOptions<UsersConnectionModel>>().Value;
             AuthenticationService = (IAuthenticationService)provider.GetService(typeof(IAuthenticationService));
         }
 
@@ -32,7 +37,7 @@ namespace AuthenticateService_IntegrationTests
             /* Arrange */
             //Set user to authenticate
             var principal = AuthenticationService.GetCurrentClaimsPrincipal(null);
-            var scopes = new List<string> { };
+            var scopes = new List<string> { UsersConnectionModel.NorskOffshoreAuthenticateServiceScope };
 
             /* Act */
             var token = await AuthenticationService.GetTokenForUserAsync(scopes.ToArray(), principal);
@@ -47,7 +52,7 @@ namespace AuthenticateService_IntegrationTests
             /* Arrange */
             //Set user to authenticate
             var claims = new List <Claim>();
-            var scopes = new List<string> { };
+            var scopes = new List<string> { UsersConnectionModel.NorskOffshoreAuthenticateServiceScope };
 
             /* Act */
             var token = await AuthenticationService.GetTokenForUserAsync(scopes.ToArray(), claims);
@@ -61,8 +66,8 @@ namespace AuthenticateService_IntegrationTests
         {
             /* Arrange */
             //Set user to authenticate
-            var upn = "";
-            var scopes = new List<string> { };
+            var upn = "atle.holm_cegal.com#EXT#@cegaltest.onmicrosoft.com";
+            var scopes = new List<string> { UsersConnectionModel.NorskOffshoreAuthenticateServiceScope };
 
             /* Act */
             var token = await AuthenticationService.GetTokenForUserAsync(scopes.ToArray(), upn);

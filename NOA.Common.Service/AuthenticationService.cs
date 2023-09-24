@@ -29,7 +29,11 @@ namespace NOA.Common.Service
         private static IPublicClientApplication _identityClientApp;
         private static AzureAdOptions _adOptions;
 
-        public AuthenticationService(IOptions<AzureAdOptions> adOptions, ITokenAcquisition tokenAcquisition, ILogger<AuthenticationService> logger)
+        public AuthenticationService(
+            IOptions<AzureAdOptions> adOptions, 
+            IOptions<UsersConnectionModel> usersConnectionOptions,
+            ITokenAcquisition tokenAcquisition, 
+            ILogger<AuthenticationService> logger)
         {
             _logger = logger;
 
@@ -89,6 +93,7 @@ namespace NOA.Common.Service
                     .ExecuteAsync().Result;
 
                 _tokenForUser = authResult.AccessToken;
+
             } catch (Exception ex1)
             {
                 try
