@@ -1,6 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 
-namespace NorskOffshoreAuthenticateService.Models
+namespace NorskOffshoreAuthenticateBackend.Models
 {
     public class UserContext : DbContext
     {

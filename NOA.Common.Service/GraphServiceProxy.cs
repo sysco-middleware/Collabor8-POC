@@ -9,6 +9,8 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Identity.Web;
+using Microsoft.Kiota.Abstractions;
+using Invitation = Microsoft.Graph.Models.Invitation;
 
 namespace NOA.Common.Service
 {
@@ -48,6 +50,53 @@ namespace NOA.Common.Service
             if (this._consentHandler == null)
                 throw new NullReferenceException("The MicrosoftIdentityConsentAndConditionalAccessHandler has not been added to the services collection during the ConfigureServices()");
 
+        }
+        
+        public async Task<Invitation?> InviteUser(string email, string redirectUrl)
+        {
+            var requestBody = new Invitation
+            {
+                InvitedUserEmailAddress = email,
+                InviteRedirectUrl = redirectUrl,
+                SendInvitationMessage = true
+            };
+
+            // we use MSAL.NET to get a token to call the API On Behalf Of the current user
+            try
+            {
+                // Call the Graph API and retrieve the user's profile.
+                var reply =
+                    await CallGraphWithCAEFallback(
+                        async () =>
+                        {
+                            try
+                            {
+                                var result = await _graphServiceClient.Invitations.PostAsync(requestBody);
+
+                                return result;
+                            }
+                            catch (Exception ex)
+                            {
+                                throw;
+                            }
+                        }
+                    );
+
+                return reply;
+            }
+            catch (MsalUiRequiredException ex)
+            {
+                _tokenAcquisition.ReplyForbiddenWithWwwAuthenticateHeader(_graphScopes, ex);
+                throw;
+            }
+            catch (MicrosoftIdentityWebChallengeUserException ex)
+            {
+                throw;
+            }
+            catch (Exception ex)
+            {
+                throw;
+            }
         }
 
         public async Task<User> GetGraphApiUser(string filter)

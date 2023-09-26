@@ -3,7 +3,7 @@
 
 using Microsoft.Graph.Models;
 
-namespace NorskOffshoreAuthenticateService.Models
+namespace NorskOffshoreAuthenticateBackend.Models
 {
     public class UserItem
     {

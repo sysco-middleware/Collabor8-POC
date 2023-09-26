@@ -16,34 +16,56 @@ using Microsoft.Graph.Models;
 using NOA.Common.Constants;
 using NOA.Common.Service.Model;
 using NOA.Common.Service.Utils;
+using Microsoft.Extensions.Logging;
 
 namespace NOA.Common.Service
 {
-    public class UserService : IUserService
+    public class UserService : UserAuthenticationBase, IUserService
     {
-        private readonly HttpClient _httpClient;
-        private readonly string _NorskOffshoreAuthenticateServiceScope = string.Empty;
-        private readonly string _UsersBaseAddress = string.Empty;
-        private readonly string _RedirectUri = string.Empty;
-        private readonly string _ApiRedirectUri = string.Empty;
-        private readonly ITokenAcquisition _tokenAcquisition;
 
-        public UserService(ITokenAcquisition tokenAcquisition, HttpClient httpClient, IConfiguration configuration)
+        private readonly string _UsersBaseAddress = string.Empty;
+
+        public UserService(ITokenAcquisition tokenAcquisition, 
+            HttpClient httpClient, 
+            IConfiguration configuration)
+            : base(httpClient, tokenAcquisition, configuration)
         {
-            _httpClient = httpClient;
-            _tokenAcquisition = tokenAcquisition;
-            _NorskOffshoreAuthenticateServiceScope = configuration["users:NorskOffshoreAuthenticateServiceScope"];
             _UsersBaseAddress = configuration["users:UsersBaseAddress"];
-            _RedirectUri = configuration["RedirectUri"];
-            _ApiRedirectUri = configuration["users:AdminConsentRedirectApi"];
 
             if (!string.IsNullOrEmpty(_UsersBaseAddress))
             {
                 if (!_UsersBaseAddress.EndsWith("/"))
                 {
-                    _UsersBaseAddress = _UsersBaseAddress+"/";
+                    _UsersBaseAddress = _UsersBaseAddress + "/";
                 }
             }
+        }
+
+        public async Task<bool> InviteUser(string emailAddress)
+        {
+            await PrepareAuthenticatedClient();
+            var data = new
+            {
+                userMail = emailAddress
+                // Add other properties as needed
+            };
+
+            var jsonContent = new StringContent(JsonConvert.SerializeObject(data), Encoding.UTF8, "application/json");
+
+            var response = await _httpClient.PostAsync($"{_UsersBaseAddress}api/users/InviteUser?userMail={emailAddress}&redirectUrl={_RedirectUri}", jsonContent);
+
+            if (response.StatusCode == HttpStatusCode.OK)
+            {
+                var content = await response.Content.ReadAsStringAsync();
+                var s = JsonConvert.DeserializeObject<bool>(content);
+                return s;
+
+            }
+            else if (response.StatusCode == HttpStatusCode.Unauthorized)
+            {
+                HandleChallengeFromWebApi(response);
+            }
+            throw new HttpRequestException($"Invalid status code in the HttpResponseMessage: {response.StatusCode}.");
         }
 
         public async Task<UserItem> GetLoggedInUser()

@@ -22,7 +22,10 @@ namespace NorskOffshoreAuthenticateClient.Controllers
         private readonly ILogger<UsersController> _logger;
         private readonly CustomLogOptions _customLogOptions;
 
-        public UsersController(IUserService usersService, ILogger<UsersController> logger, IOptions<CustomLogOptions> customLogOptions)
+        public UsersController(
+            IUserService usersService, 
+            ILogger<UsersController> logger, 
+            IOptions<CustomLogOptions> customLogOptions)
         {
             _usersService = usersService;
             _logger = logger;
@@ -88,6 +91,30 @@ namespace NorskOffshoreAuthenticateClient.Controllers
             {
                 LogException(ex);
                 throw;                
+            }
+        }
+
+        public async Task<ActionResult> InviteUser(string emailAddress)
+        {
+            try
+            {
+                if (String.IsNullOrEmpty(emailAddress))
+                {
+                    ViewData["ErrorToView"] = "Parameter 'emailAddress' was empty. Try again?";
+                    return View();
+                }
+
+                bool isInvited = await _usersService.InviteUser(emailAddress);
+
+                ViewData["EmailAddress"] = emailAddress;
+                ViewData["IsInvited"] = isInvited;
+
+                return View();
+            }
+            catch (Exception ex)
+            {
+                LogException(ex);
+                throw;
             }
         }
 

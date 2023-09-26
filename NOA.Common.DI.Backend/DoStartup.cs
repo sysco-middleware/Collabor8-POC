@@ -86,8 +86,11 @@ namespace NOA.Common.DI.Backend
                 .AddMicrosoftIdentityConsentHandler();
 
             var adOptionsSection = _configuration.GetSection(ConfigConstants.AzureAdOptions);
+            var usersConnectionModelSection = _configuration.GetSection(ConfigConstants.UsersConnectionModel);
             _serviceCollection
+                .Configure<UsersConnectionModel>(opt => usersConnectionModelSection.Bind(opt))
                 .Configure<AzureAdOptions>(opt => adOptionsSection.Bind(opt))
+                .AddLogging()
                 .AddTransient<IGraphServiceProxy, GraphServiceProxy>()
                 .AddTransient<Service.IAuthenticationService, Service.AuthenticationService>();
         }

@@ -3,34 +3,32 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Graph;
 using Microsoft.Identity.Web;
 using NOA.Common.Constants;
-using NorskOffshoreAuthenticateService.Controllers;
-using NorskOffshoreAuthenticateService.Models;
+using NorskOffshoreAuthenticateBackend.Controllers;
+using NorskOffshoreAuthenticateBackend.Models;
 using NOA.Common.Service;
 using Xunit.DependencyInjection;
 using Microsoft.Kiota.Abstractions.Authentication;
 using Moq;
 using System.Linq.Expressions;
 using Microsoft.Graph.Models;
+using Microsoft.CodeAnalysis.Options;
+using NOA.Common.Service.Model;
+using Microsoft.Extensions.Options;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace AuthenticateService_IntegrationTests
 {
-    public class AuthenticateServiceTests
+    public class UserControllerTests
     {
         private UsersController UsersController { get; set; }
         private string userMail_existing = "existing_tom@corporation.org";
         private string userMail_missing = "missing_jonas@corporation.org";
-        public AuthenticateServiceTests()
+        public UserControllerTests()
         {
             /* Arrange */
-            //Set up AuthenticateService for testing
-
             var provider = Startup.StartupContainer.GetServiceProvider();
 
-            /*
-             * ITokenAcquisition tokenAcquisition, 
-             * IConfiguration configuration, 
-             * IHttpContextAccessor httpContextAccessor
-             */
+            var op = provider.GetRequiredService<IOptions<UsersConnectionModel>>();
             var ca = (IHttpContextAccessor)provider.GetService(typeof(IHttpContextAccessor));
             var ia = new Mock<IAuthenticationService>();
 
@@ -48,7 +46,7 @@ namespace AuthenticateService_IntegrationTests
 
             //gp.Setup(x => x.GetGraphApiUser($"mail eq '{userMail_missing}'")).ReturnsAsync(null);
 
-            UsersController = new UsersController(gp.Object, ca, ia.Object);
+            UsersController = new UsersController(op, gp.Object, ca, ia.Object);
         }
 
         [Fact]

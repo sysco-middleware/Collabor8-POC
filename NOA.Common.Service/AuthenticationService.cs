@@ -16,16 +16,28 @@ using Microsoft.AspNetCore.Authentication;
 using Tavis.UriTemplates;
 using NOA.Common.Service.Model;
 using Microsoft.Extensions.Options;
+using Microsoft.Identity.Web;
+using static System.Formats.Asn1.AsnWriter;
+using Microsoft.Extensions.Logging;
 
 namespace NOA.Common.Service
 {
     public class AuthenticationService : IAuthenticationService
     {
+        private ILogger<AuthenticationService> _logger;
+        private readonly ITokenAcquisition _tokenAcquisition;
         private static IPublicClientApplication _identityClientApp;
         private static AzureAdOptions _adOptions;
 
-        public AuthenticationService(IOptions<AzureAdOptions> adOptions)
+        public AuthenticationService(
+            IOptions<AzureAdOptions> adOptions, 
+            IOptions<UsersConnectionModel> usersConnectionOptions,
+            ITokenAcquisition tokenAcquisition, 
+            ILogger<AuthenticationService> logger)
         {
+            _logger = logger;
+
+            _tokenAcquisition = tokenAcquisition;
             _adOptions = adOptions.Value;
 
             _identityClientApp = PublicClientApplicationBuilder
@@ -34,7 +46,30 @@ namespace NOA.Common.Service
                 .Build();
         }
 
+        public async Task<string> GetTokenForUserAsync(string[] scopes, List<Claim> claims)
+        {
+            try
+            {
+                return await GetToken(scopes, claims);
+            }
+            catch(Exception ex) {
+                _logger.LogError($"Caught general exception with real type '{ex.GetType()}' holding message: {ex.Message + ex.InnerException}");
+                throw;
+            }
+        }
 
+        public async Task<string> GetTokenForUserAsync(string[] scopes, ClaimsPrincipal principal)
+        {
+            try
+            {
+                return await _tokenAcquisition.GetAccessTokenForUserAsync(scopes, _adOptions.TenantId, default, principal);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"Caught general exception with real type '{ex.GetType()}' holding message: {ex.Message + ex.InnerException}");
+                throw;
+            }
+        }
         /// <summary>  
         /// Get Token for User.  
         /// </summary>  
@@ -58,11 +93,21 @@ namespace NOA.Common.Service
                     .ExecuteAsync().Result;
 
                 _tokenForUser = authResult.AccessToken;
-            }
 
-            catch (Exception ex)
+            } catch (Exception ex1)
             {
-                throw;
+                try
+                {
+                    _tokenForUser = await GetToken(scopes, new List<Claim>
+                        {
+                            new Claim(ClaimTypes.Upn, userPrincipalName)
+                        });
+                } catch(Exception ex2)
+                {
+                    _logger.LogError($"Caught general exception with real type '{ex2.GetType()}' holding message: {ex2.Message + ex2.InnerException}");
+                    throw;
+                }
+                _logger.LogError($"Caught general exception with real type '{ex1.GetType()}' holding message: {ex1.Message + ex1.InnerException}");
             }
 
             return _tokenForUser;
@@ -90,7 +135,6 @@ namespace NOA.Common.Service
             //
             // See: https://docs.microsoft.com/en-us/azure/active-directory/develop/active-directory-optional-claims
 
-            //var principal = GetCurrentClaimsPrincipal();
             if (principal != null)
             {
                 return principal.Claims.Any(c => c.Type == "idtyp" && c.Value == "app");
@@ -111,5 +155,25 @@ namespace NOA.Common.Service
             return httpContextAccessor?.HttpContext?.User;
 
         }
+
+        public ClaimsPrincipal GetOtherClaimsPrinciple(List<Claim> claims)
+        {
+            var identity = new ClaimsIdentity(claims, "custom-auth-type");
+            return new ClaimsPrincipal(identity);
+        }
+
+        private async Task<string> GetToken(string[] scopes, List<Claim> claims)
+        {
+            try
+            {
+                var otherUser = GetOtherClaimsPrinciple(claims);
+                return await _tokenAcquisition.GetAccessTokenForUserAsync(scopes, _adOptions.TenantId, default, otherUser);
+            }
+            catch(Exception ex)
+            {
+                _logger.LogError($"Caught general exception with real type '{ex.GetType()}' holding message: {ex.Message + ex.InnerException}");
+                throw;
+            }
+        } 
     }
 }

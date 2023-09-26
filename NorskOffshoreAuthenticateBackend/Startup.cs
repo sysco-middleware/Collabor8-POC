@@ -6,7 +6,7 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.EntityFrameworkCore;
-using NorskOffshoreAuthenticateService.Models;
+using NorskOffshoreAuthenticateBackend.Models;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using System.Linq;
 using System;

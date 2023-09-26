@@ -1,7 +1,7 @@
 ﻿using System;
 using Microsoft.AspNetCore.Mvc;
 
-namespace NorskOffshoreAuthenticateService.Controllers
+namespace NorskOffshoreAuthenticateBackend.Controllers
 {
     [Route("api/[controller]")]
     [Microsoft.AspNetCore.Authorization.AllowAnonymous]

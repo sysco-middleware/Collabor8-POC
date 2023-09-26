@@ -11,5 +11,6 @@ namespace NOA.Common.Service
     {
         Task<User> GetGraphApiUser(string filter);
         Task<List<string>> GetAllGraphApiUsers();
+        Task<Invitation?> InviteUser(string email, string redirectUrl);
     }
 }
