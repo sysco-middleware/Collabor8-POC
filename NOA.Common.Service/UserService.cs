@@ -14,19 +14,11 @@ using System.Text;
 using System.Threading.Tasks;
 using Microsoft.Graph.Models;
 using NOA.Common.Constants;
-using NorskOffshoreAuthenticateClient.Models;
-using NorskOffshoreAuthenticateClient.Utils;
+using NOA.Common.Service.Model;
+using NOA.Common.Service.Utils;
 
-namespace NorskOffshoreAuthenticateClient.Services
+namespace NOA.Common.Service
 {
-    public static class UsersServiceExtensions
-    {
-        public static void AddUsersService(this IServiceCollection services)
-        {
-            // https://docs.microsoft.com/en-us/dotnet/standard/microservices-architecture/implement-resilient-applications/use-httpclientfactory-to-implement-resilient-http-requests
-            services.AddHttpClient<IUserService, UserService>();
-        }
-    }
     public class UserService : IUserService
     {
         private readonly HttpClient _httpClient;

@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace NorskOffshoreAuthenticateClient.Utils
+namespace NOA.Common.Service.Utils
 {
     public class WebApiMsalUiRequiredException : Exception
     {

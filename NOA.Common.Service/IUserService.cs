@@ -3,12 +3,12 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using NorskOffshoreAuthenticateClient.Models;
 using Microsoft.Graph.Models;
 using System.Security.Claims;
 using NOA.Common.Constants;
+using NOA.Common.Service.Model;
 
-namespace NorskOffshoreAuthenticateClient.Services
+namespace NOA.Common.Service
 {
     public interface IUserService
     {

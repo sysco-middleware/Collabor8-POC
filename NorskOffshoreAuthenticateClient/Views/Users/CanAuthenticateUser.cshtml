@@ -2,6 +2,7 @@
     ViewData["Title"] = "Authenticate";
     bool? isAuthenticated = ViewData["IsAuthenticated"] as bool?;
     string emailAddress = ViewData["EmailAddress"] as string ?? string.Empty;
+    string errorMessageFromBackend = ViewData["ErrorToView"] as string ?? string.Empty;
 }
 
 <div class="container">
@@ -35,6 +36,14 @@
         <div>
             <i style="color: red;" class="fas fa-solid fa-circle-exclamation"></i> <!-- Need FontAwesome for icons -->
             <span>Not Authenticated</span>
+        </div>
+    }
+    @if (!string.IsNullOrEmpty(errorMessageFromBackend))
+    {
+        <br />
+        <div class="green-checkmark">
+            <i style="color: red;" class="fas fa-solid fa-circle-exclamation"></i>
+            <span>Backend error message: @errorMessageFromBackend </span>
         </div>
     }
 </div>

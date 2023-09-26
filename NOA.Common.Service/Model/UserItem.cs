@@ -1,6 +1,6 @@
 ﻿using Microsoft.Graph.Models;
 
-namespace NorskOffshoreAuthenticateClient.Models
+namespace NOA.Common.Service.Model
 {
     public class UserItem
     {

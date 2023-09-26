@@ -15,7 +15,12 @@
     <PackageReference Include="Microsoft.AspNetCore.Http.Connections.Common" Version="7.0.11" />
     <PackageReference Include="Microsoft.Graph" Version="5.27.0" />
     <PackageReference Include="Microsoft.Identity.Client" Version="4.56.0" />
-    <PackageReference Include="Microsoft.Identity.Web" Version="2.13.4" />
+    <PackageReference Include="Microsoft.Identity.Web" Version="2.14.0" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\NOA.Common.Constants\NOA.Common.Constants.csproj" />
   </ItemGroup>
 
 </Project>

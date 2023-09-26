@@ -8,12 +8,13 @@ using Microsoft.AspNetCore.Mvc.Authorization;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using NorskOffshoreAuthenticateClient.Services;
+using NOA.Common.DI.DIFrontend;
 
 namespace NorskOffshoreAuthenticateClient
 {
     public class Startup
     {
+        private static DoFrontendStartup _doFrontendStartup;
         public Startup(IConfiguration configuration)
         {
             Configuration = configuration;
@@ -24,32 +25,7 @@ namespace NorskOffshoreAuthenticateClient
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-            services.Configure<CookiePolicyOptions>(options =>
-            {
-                // This lambda determines whether user consent for non-essential cookies is needed for a given request.
-                options.CheckConsentNeeded = context => true;
-                options.MinimumSameSitePolicy = SameSiteMode.Unspecified;
-                // Handling SameSite cookie according to https://docs.microsoft.com/en-us/aspnet/core/security/samesite?view=aspnetcore-3.1
-                options.HandleSameSiteCookieCompatibility();
-            });
-
-            //Add authentication with the Microsoft identity platform.
-            services.AddMicrosoftIdentityWebAppAuthentication(Configuration)
-                    .EnableTokenAcquisitionToCallDownstreamApi(new string[] { Configuration["Users:NorskOffshoreAuthenticateServiceScope"] })
-                    .AddInMemoryTokenCaches();
-
-            //Enables to add client service to use the HttpClient by dependency injection.
-            services.AddUsersService();
-
-            services.AddControllersWithViews(options =>
-            {
-                var policy = new AuthorizationPolicyBuilder()
-                    .RequireAuthenticatedUser()
-                    .Build();
-                options.Filters.Add(new AuthorizeFilter(policy));
-            }).AddMicrosoftIdentityUI();
-
-            services.AddRazorPages();
+            _doFrontendStartup = new DoFrontendStartup(Configuration, services);
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

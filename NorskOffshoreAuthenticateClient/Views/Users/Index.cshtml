@@ -1,7 +1,8 @@
-﻿@model IEnumerable<NorskOffshoreAuthenticateClient.Models.UserItem>
+﻿@model IEnumerable<NOA.Common.Service.Model.UserItem>
 
 @{
     ViewData["Title"] = "Index";
+    string errorMessageFromBackend = ViewData["ErrorToView"] as string ?? string.Empty;
 }
 
 <h3> User Info</h3>
@@ -90,3 +91,12 @@
         }
     </tbody>
 </table>
+
+@if (!string.IsNullOrEmpty(errorMessageFromBackend))
+{
+    <br />
+    <div class="green-checkmark">
+        <i style="color: red;" class="fas fa-solid fa-circle-exclamation"></i>
+        <span>Backend error message: @errorMessageFromBackend </span>
+    </div>
+}
