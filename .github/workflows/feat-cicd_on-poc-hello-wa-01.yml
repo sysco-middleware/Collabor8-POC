@@ -40,18 +40,18 @@ jobs:
       
       # build backend API service
       - name: Build with dotnet
-        working-directory: ${{ github.workspace }}/NorskOffshoreAuthenticateService
+        working-directory: ${{ github.workspace }}/NorskOffshoreAuthenticateBackend
         run: dotnet build --configuration Release
 
       - name: dotnet publish
-        working-directory: ${{ github.workspace }}/NorskOffshoreAuthenticateService
+        working-directory: ${{ github.workspace }}/NorskOffshoreAuthenticateBackend
         run: dotnet publish -c Release -o ${{env.DOTNET_ROOT}}/onservice
 
       - name: Upload artifact for deployment job
         uses: actions/upload-artifact@v2
         with:
           name: onservice
-          working-directory: ${{ github.workspace }}/NorskOffshoreAuthenticateService
+          working-directory: ${{ github.workspace }}/NorskOffshoreAuthenticateBackend
           path: ${{env.DOTNET_ROOT}}/onservice
 
   deploy-frontend:
