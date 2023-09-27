@@ -11,6 +11,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Identity.Web;
 using Microsoft.Kiota.Abstractions;
 using Invitation = Microsoft.Graph.Models.Invitation;
+using Microsoft.Extensions.Logging;
 
 namespace NOA.Common.Service
 {
@@ -21,6 +22,7 @@ namespace NOA.Common.Service
         private readonly MicrosoftIdentityConsentAndConditionalAccessHandler _consentHandler;
         private readonly GraphServiceClient _graphServiceClient;
         private readonly ITokenAcquisition _tokenAcquisition;
+        private readonly ILogger<GraphServiceProxy> _logger;
 
         public GraphServiceProxy()
         {
@@ -34,8 +36,10 @@ namespace NOA.Common.Service
             ITokenAcquisition tokenAcquisition,
             IConfiguration configuration,
             GraphServiceClient graphServiceClient,
-            MicrosoftIdentityConsentAndConditionalAccessHandler consentHandler)
+            MicrosoftIdentityConsentAndConditionalAccessHandler consentHandler,
+            ILogger<GraphServiceProxy> logger)
         {
+            _logger = logger;
             _tokenAcquisition = tokenAcquisition;
 
             _graphScopes = configuration
@@ -75,6 +79,7 @@ namespace NOA.Common.Service
                             }
                             catch (Exception ex)
                             {
+                                _logger.LogError($"Caught error of type {ex.GetType()} with message: '{ex.Message + ex.InnerException}'");
                                 throw;
                             }
                             return true;
@@ -90,10 +95,12 @@ namespace NOA.Common.Service
             }
             catch (MicrosoftIdentityWebChallengeUserException ex)
             {
+                _logger.LogError($"Caught error of type {ex.GetType()} with message: '{ex.Message + ex.InnerException}'");
                 throw;
             }
             catch (Exception ex)
             {
+                _logger.LogError($"Caught error of type {ex.GetType()} with message: '{ex.Message + ex.InnerException}'");
                 throw;
             }
         }
@@ -124,6 +131,7 @@ namespace NOA.Common.Service
                             }
                             catch (Exception ex)
                             {
+                                _logger.LogError($"Caught error of type {ex.GetType()} with message: '{ex.Message + ex.InnerException}'");
                                 throw;
                             }
                         }
@@ -133,15 +141,18 @@ namespace NOA.Common.Service
             }
             catch (MsalUiRequiredException ex)
             {
+                _logger.LogError($"Caught error of type {ex.GetType()} with message: '{ex.Message + ex.InnerException}'");
                 _tokenAcquisition.ReplyForbiddenWithWwwAuthenticateHeader(_graphScopes, ex);
                 throw;
             }
             catch (MicrosoftIdentityWebChallengeUserException ex)
             {
+                _logger.LogError($"Caught error of type {ex.GetType()} with message: '{ex.Message + ex.InnerException}'");
                 throw;
             }
             catch (Exception ex)
             {
+                _logger.LogError($"Caught error of type {ex.GetType()} with message: '{ex.Message + ex.InnerException}'");
                 throw;
             }
         }
@@ -176,6 +187,7 @@ namespace NOA.Common.Service
                             }
                             catch (Exception ex)
                             {
+                                _logger.LogError($"Caught error of type {ex.GetType()} with message: '{ex.Message + ex.InnerException}'");
                                 throw;
                             }
                         }
@@ -190,15 +202,18 @@ namespace NOA.Common.Service
             }
             catch (MsalUiRequiredException ex)
             {
+                _logger.LogError($"Caught error of type {ex.GetType()} with message: '{ex.Message + ex.InnerException}'");
                 _tokenAcquisition.ReplyForbiddenWithWwwAuthenticateHeader(_graphScopes, ex);
                 throw;
             }
             catch (MicrosoftIdentityWebChallengeUserException ex)
             {
+                _logger.LogError($"Caught error of type {ex.GetType()} with message: '{ex.Message + ex.InnerException}'");
                 throw;
             }
             catch (Exception ex)
             {
+                _logger.LogError($"Caught error of type {ex.GetType()} with message: '{ex.Message + ex.InnerException}'");
                 throw;
             }
         }
@@ -232,7 +247,7 @@ namespace NOA.Common.Service
             catch (MsalUiRequiredException ex)
             {
                 _tokenAcquisition.ReplyForbiddenWithWwwAuthenticateHeader(_graphScopes, ex);
-                throw ex;
+                throw;
             }
         }
 
@@ -252,6 +267,7 @@ namespace NOA.Common.Service
             }
             catch (ServiceException ex) when (ex.Message.Contains("Continuous access evaluation resulted in claims challenge"))
             {
+                _logger.LogError($"Caught error of type {ex.GetType()} with message: '{ex.Message + ex.InnerException}'");
                 try
                 {
                     // Get challenge from response of Graph API
@@ -261,6 +277,7 @@ namespace NOA.Common.Service
                 }
                 catch (Exception ex2)
                 {
+                    _logger.LogError($"Caught error of type {ex2.GetType()} with message: '{ex.Message + ex.InnerException}'");
                     _consentHandler.HandleException(ex2);
                 }
 
