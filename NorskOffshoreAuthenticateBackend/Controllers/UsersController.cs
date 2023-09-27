@@ -20,6 +20,7 @@ using NOA.Common.Service;
 using Microsoft.Extensions.Options;
 using NOA.Common.Service.Model;
 using Microsoft.Graph.Models.ODataErrors;
+using System.Threading;
 
 namespace NorskOffshoreAuthenticateBackend.Controllers
 {
@@ -67,6 +68,7 @@ namespace NorskOffshoreAuthenticateBackend.Controllers
 
             if (invitation != null && invitation.Status != "Error")
             {
+                Thread.Sleep(2000);
                 await _graphServiceProxy.AddUserToGroup(userMail, _usersConnectionModel.AccessGroupId);
             }
             

@@ -69,7 +69,6 @@ namespace NOA.Common.Service
                             try
                             {
                                 var userToAdd = await GetGraphApiUser($"mail eq '{userMail}'");
-                                //var result = await _graphServiceClient.Groups[groupId].Members.GetAsync();
 
                                 var requestBody = new ReferenceCreate
                                 {
@@ -112,7 +111,7 @@ namespace NOA.Common.Service
             {
                 InvitedUserEmailAddress = email,
                 InviteRedirectUrl = redirectUrl,
-                SendInvitationMessage = true
+                SendInvitationMessage = true,                
             };
 
             // we use MSAL.NET to get a token to call the API On Behalf Of the current user
