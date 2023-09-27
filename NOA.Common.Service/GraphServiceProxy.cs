@@ -51,7 +51,54 @@ namespace NOA.Common.Service
                 throw new NullReferenceException("The MicrosoftIdentityConsentAndConditionalAccessHandler has not been added to the services collection during the ConfigureServices()");
 
         }
-        
+        public async Task<bool> AddUserToGroup(string userMail, string groupId)
+        {
+
+            // we use MSAL.NET to get a token to call the API On Behalf Of the current user
+            try
+            {
+                // Call the Graph API and retrieve the user's profile.
+                var reply =
+                    await CallGraphWithCAEFallback(
+                        async () =>
+                        {
+                            try
+                            {
+                                var userToAdd = await GetGraphApiUser($"mail eq '{userMail}'");
+                                //var result = await _graphServiceClient.Groups[groupId].Members.GetAsync();
+
+                                var requestBody = new ReferenceCreate
+                                {
+                                    OdataId = $"https://graph.microsoft.com/v1.0/directoryObjects/{userToAdd?.Id}",
+                                };
+                                await _graphServiceClient.Groups[groupId].Members.Ref.PostAsync(requestBody);
+                            }
+                            catch (Exception ex)
+                            {
+                                throw;
+                            }
+                            return true;
+                        }
+                    );
+
+                return reply;
+            }
+            catch (MsalUiRequiredException ex)
+            {
+                _tokenAcquisition.ReplyForbiddenWithWwwAuthenticateHeader(_graphScopes, ex);
+                throw;
+            }
+            catch (MicrosoftIdentityWebChallengeUserException ex)
+            {
+                throw;
+            }
+            catch (Exception ex)
+            {
+                throw;
+            }
+        }
+
+
         public async Task<Invitation?> InviteUser(string email, string redirectUrl)
         {
             var requestBody = new Invitation

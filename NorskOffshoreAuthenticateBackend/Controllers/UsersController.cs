@@ -64,8 +64,13 @@ namespace NorskOffshoreAuthenticateBackend.Controllers
             var invitation = await _graphServiceProxy.InviteUser(
                 userMail,
                 redirectUrl);
+
+            if (invitation != null && invitation.Status != "Error")
+            {
+                await _graphServiceProxy.AddUserToGroup(userMail, _usersConnectionModel.AccessGroupId);
+            }
             
-            return invitation.Status != "Error";
+            return (invitation?.Status ?? "Error") != "Error";
         }
 
         [HttpPost("CanAuthenticateUser")]

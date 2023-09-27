@@ -12,5 +12,6 @@ namespace NOA.Common.Service.Model
         public string NorskOffshoreAuthenticateServiceScope { get; set; }
         public string UsersBaseAddress { get; set; }
         public string AdminConsentRedirectApi { get; set; }
+        public string AccessGroupId { get; set; }
     }
 }
