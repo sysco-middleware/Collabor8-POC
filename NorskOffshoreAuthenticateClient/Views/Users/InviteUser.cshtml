@@ -4,6 +4,7 @@
     string errorMessageFromBackend = ViewData["ErrorToView"] as string ?? string.Empty;
     bool? isInvited = ViewData["IsInvited"] as bool?;
     bool? IsAddedToAccessGroup = ViewData["IsAddedToAccessGroup"] as bool?;
+    string IsAddedToAccessGroupStatus = ViewData["IsAddedToAccessGroupStatus"] as string;
 }
 
 <div class="container">
@@ -45,7 +46,7 @@
         <br />
         <div>
             <i style="color: green;" class="fas fa-check-circle"></i> <!-- Need FontAwesome for icons -->
-            <span>Given access</span>
+            <span>Given access: @IsAddedToAccessGroupStatus</span>
         </div>
     }
     else if (IsAddedToAccessGroup.HasValue && !IsAddedToAccessGroup.Value)
@@ -53,7 +54,7 @@
         <br />
         <div>
             <i style="color: red;" class="fas fa-solid fa-circle-exclamation"></i> <!-- Need FontAwesome for icons -->
-            <span>Access group grant failed</span>
+            <span>Access group grant failed: @IsAddedToAccessGroupStatus</span>
         </div>
     }
     @if (!string.IsNullOrEmpty(errorMessageFromBackend))

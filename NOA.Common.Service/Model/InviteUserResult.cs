@@ -1,4 +1,5 @@
-﻿using System;
+﻿using NOA.Common.Constants;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -10,5 +11,6 @@ namespace NOA.Common.Service.Model
     {
         public bool InviteSuccess { get; set; }
         public bool AddGroupSuccess { get; set; }
+        public AddToGroupStatus AddToGroupStatus { get; set; }  
     }
 }

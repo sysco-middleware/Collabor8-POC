@@ -11,6 +11,7 @@ namespace NOA.Common.Constants
         Success,
         Failed,
         AlreadyMember,
-        MissingParameters
+        MissingParameters,
+        PrerequisitesFailed
     }
 }

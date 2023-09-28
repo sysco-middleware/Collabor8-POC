@@ -139,6 +139,7 @@ namespace NorskOffshoreAuthenticateClient.Controllers
                 ViewData["EmailAddress"] = emailAddress;
                 ViewData["IsInvited"] = isInvited.InviteSuccess;
                 ViewData["IsAddedToAccessGroup"] = isInvited.AddGroupSuccess;
+                ViewData["IsAddedToAccessGroupStatus"] = isInvited.AddToGroupStatus.ToString();
 
                 return View();
             }

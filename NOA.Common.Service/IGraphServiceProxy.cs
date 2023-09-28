@@ -11,7 +11,7 @@ namespace NOA.Common.Service
     {
         Task<List<DirectoryObject>> GetGroupMembers(string groupId);
         Task<bool> AddUserToGroup(string userMail, string groupId);
-        Task<User> GetGraphApiUser(string filter);
+        Task<User?> GetGraphApiUser(string filter);
         Task<List<string>> GetAllGraphApiUsers();
         Task<Invitation?> InviteUser(string email, string redirectUrl);
     }

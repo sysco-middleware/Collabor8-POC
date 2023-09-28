@@ -12,6 +12,7 @@ using Microsoft.Identity.Web;
 using Microsoft.Kiota.Abstractions;
 using Invitation = Microsoft.Graph.Models.Invitation;
 using Microsoft.Extensions.Logging;
+using Microsoft.Graph.Models.ExternalConnectors;
 
 namespace NOA.Common.Service
 {
@@ -126,6 +127,9 @@ namespace NOA.Common.Service
                             catch (Exception ex)
                             {
                                 _logger.LogError($"Caught error of type {ex.GetType()} with message: '{ex.Message + ex.InnerException}'");
+                                if (ex.Message == "One or more added object references already exist for the following modified properties: 'members'.") { 
+                                    return false;
+                                }
                                 throw;
                             }
                             return true;
@@ -203,7 +207,7 @@ namespace NOA.Common.Service
             }
         }
 
-        public async Task<User> GetGraphApiUser(string filter)
+        public async Task<User?> GetGraphApiUser(string filter)
         {
             // we use MSAL.NET to get a token to call the API On Behalf Of the current user
             try
@@ -239,12 +243,8 @@ namespace NOA.Common.Service
                         }
                     );
 
-                if (users?.Value != null)
-                {
-                    return users.Value?.FirstOrDefault();
-                }
-
-                throw new Exception();
+                
+                return users?.Value?.FirstOrDefault();               
             }
             catch (MsalUiRequiredException ex)
             {

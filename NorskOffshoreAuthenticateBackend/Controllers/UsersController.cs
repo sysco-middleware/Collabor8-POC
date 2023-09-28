@@ -99,7 +99,8 @@ namespace NorskOffshoreAuthenticateBackend.Controllers
             {
                 return new InviteUserResult() {
                     InviteSuccess = false,
-                    AddGroupSuccess = false
+                    AddGroupSuccess = false,
+                    AddToGroupStatus = AddToGroupStatus.Failed
                 };
             }
 
@@ -108,31 +109,46 @@ namespace NorskOffshoreAuthenticateBackend.Controllers
                 redirectUrl);
 
             var addUserToGroupresult = true;
+            var addToGroupStatus = AddToGroupStatus.Success;
             try
             {
                 if (invitation != null && invitation.Status.ToLower() != "error")
                 {
-                    Thread.Sleep(2000);
-                    var groupMembers = await _graphServiceProxy.GetGroupMembers(_usersConnectionModel.AccessGroupId);
-                    var userAdded = await _graphServiceProxy.GetGraphApiUser($"mail eq '{userMail}'");
-                    if (!groupMembers.Exists(x => x.Id == userAdded.Id))
+                    User userAdded = null;
+                    List<DirectoryObject> groupMembers = null;
+                    do
                     {
-                        await _graphServiceProxy.AddUserToGroup(userMail, _usersConnectionModel.AccessGroupId);
+                        Thread.Sleep(2000);
+                        userAdded = await _graphServiceProxy.GetGraphApiUser($"mail eq '{userMail}'");                        
+                    } while (userAdded == null);
+
+                    groupMembers = await _graphServiceProxy.GetGroupMembers(_usersConnectionModel.AccessGroupId);
+                    if (!groupMembers.Exists(x => x.Id == userAdded?.Id))
+                    {
+                        var statusAdd = await _graphServiceProxy.AddUserToGroup(userMail, _usersConnectionModel.AccessGroupId);
+
+                        addToGroupStatus = statusAdd? AddToGroupStatus.Success : AddToGroupStatus.AlreadyMember;
                     }
-                    
+                    else
+                    {
+                        addToGroupStatus = AddToGroupStatus.AlreadyMember;
+                    }
                 } else
                 {
                     addUserToGroupresult = false;
+                    addToGroupStatus = AddToGroupStatus.PrerequisitesFailed;
                 }
             } catch (Exception e) {
                 addUserToGroupresult = false;
+                addToGroupStatus = AddToGroupStatus.Failed;
                 _logger.LogError($"Caught exception of type '{e.GetType()}' with message: '{e.Message + e.InnerException}'");
             }
 
             return new InviteUserResult()
             {
                 AddGroupSuccess = addUserToGroupresult,
-                InviteSuccess = (invitation?.Status.ToLower() ?? "error") != "error"
+                InviteSuccess = (invitation?.Status.ToLower() ?? "error") != "error",
+                AddToGroupStatus = addToGroupStatus
             };
         }
 
