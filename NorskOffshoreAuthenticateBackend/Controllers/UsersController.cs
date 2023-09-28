@@ -20,6 +20,9 @@ using NOA.Common.Service;
 using Microsoft.Extensions.Options;
 using NOA.Common.Service.Model;
 using Microsoft.Graph.Models.ODataErrors;
+using System.Threading;
+using Microsoft.Build.Framework;
+using Microsoft.Extensions.Logging;
 
 namespace NorskOffshoreAuthenticateBackend.Controllers
 {
@@ -32,6 +35,7 @@ namespace NorskOffshoreAuthenticateBackend.Controllers
         private readonly IAuthenticationService _authService;
         private readonly IGraphServiceProxy _graphServiceProxy;
         private readonly UsersConnectionModel _usersConnectionModel;
+        private readonly ILogger<UsersController> _logger;
 
         private const string _usersReadScope = "ToDoList.Read";
         private const string _usersReadWriteScope = "ToDoList.ReadWrite";
@@ -42,30 +46,61 @@ namespace NorskOffshoreAuthenticateBackend.Controllers
             IOptions<UsersConnectionModel> usersConnectionModel,
             IGraphServiceProxy graphServiceProxy,
             IHttpContextAccessor httpContextAccessor,
-            IAuthenticationService authService)
+            IAuthenticationService authService,
+            ILogger<UsersController> logger)
         {
             _graphServiceProxy = graphServiceProxy;
             _httpContextAccessor = httpContextAccessor;
             _authService = authService;
             _usersConnectionModel = usersConnectionModel.Value;
+            _logger = logger;
         }
 
         [HttpPost("InviteUser")]
         [RequiredScopeOrAppPermission(
             AcceptedScope = new string[] { _usersReadScope, _usersReadWriteScope },
             AcceptedAppPermission = new string[] { _usersReadAllPermission, _usersReadWriteAllPermission })]
-        public async Task<ActionResult<bool>> InviteUser(string userMail, string redirectUrl)
+        public async Task<ActionResult<InviteUserResult>> InviteUser(string userMail, string redirectUrl)
         {
             if (String.IsNullOrEmpty(userMail))
             {
-                return false;
+                return new InviteUserResult() {
+                    InviteSuccess = false,
+                    AddGroupSuccess = false
+                };
             }
 
             var invitation = await _graphServiceProxy.InviteUser(
                 userMail,
                 redirectUrl);
-            
-            return invitation.Status != "Error";
+
+            var addUserToGroupresult = true;
+            try
+            {
+                if (invitation != null && invitation.Status.ToLower() != "error")
+                {
+                    Thread.Sleep(2000);
+                    var groupMembers = await _graphServiceProxy.GetGroupMembers(_usersConnectionModel.AccessGroupId);
+                    var userAdded = await _graphServiceProxy.GetGraphApiUser($"mail eq '{userMail}'");
+                    if (!groupMembers.Exists(x => x.Id == userAdded.Id))
+                    {
+                        await _graphServiceProxy.AddUserToGroup(userMail, _usersConnectionModel.AccessGroupId);
+                    }
+                    
+                } else
+                {
+                    addUserToGroupresult = false;
+                }
+            } catch (Exception e) {
+                addUserToGroupresult = false;
+                _logger.LogError($"Caught exception of type '{e.GetType()}' with message: '{e.Message + e.InnerException}'");
+            }
+
+            return new InviteUserResult()
+            {
+                AddGroupSuccess = addUserToGroupresult,
+                InviteSuccess = (invitation?.Status.ToLower() ?? "error") != "error"
+            };
         }
 
         [HttpPost("CanAuthenticateUser")]
@@ -134,16 +169,17 @@ namespace NorskOffshoreAuthenticateBackend.Controllers
                     "An authentication error occurred while acquiring a token for downstream API\n" + ex.ErrorCode +
                     "\n" + ex.Message);
             }
-            catch (MicrosoftIdentityWebChallengeUserException ex)
+            catch (MicrosoftIdentityWebChallengeUserException e)
             {
+                _logger.LogError($"Caught exception of type '{e.GetType()}' with message: '{e.Message + e.InnerException}'");
                 HttpContext.Response.StatusCode = (int)HttpStatusCode.Conflict;
                 await HttpContext.Response.WriteAsync(
-                    "An Web challenge error occurred, code:\n" + ex.MsalUiRequiredException.StatusCode +
-                    "\n" + ex.MsalUiRequiredException.Classification +
-                    "\n" + ex.Message);
-            } catch (ODataError ex)
+                    "An Web challenge error occurred, code:\n" + e.MsalUiRequiredException.StatusCode +
+                    "\n" + e.MsalUiRequiredException.Classification +
+                    "\n" + e.Message);
+            } catch (ODataError e)
             {
-
+                _logger.LogError($"Caught exception of type '{e.GetType()}' with message: '{e.Message + e.InnerException}'");
                 throw;
             }
 
@@ -163,16 +199,13 @@ namespace NorskOffshoreAuthenticateBackend.Controllers
             }
             catch (MsalUiRequiredException ex)
             {
+                _logger.LogError($"Caught exception of type '{ex.GetType()}' with message: '{ex.Message + ex.InnerException}'");
                 HttpContext.Response.ContentType = "text/plain";
                 HttpContext.Response.StatusCode = (int)HttpStatusCode.Unauthorized;
                 await HttpContext.Response.WriteAsync("An authentication error occurred while acquiring a token for downstream API\n" + ex.ErrorCode + "\n" + ex.Message);
             }
 
             return null;
-        }
-
-        
-
-
+        }      
     }
 }

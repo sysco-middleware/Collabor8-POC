@@ -41,7 +41,7 @@ namespace NOA.Common.Service
             }
         }
 
-        public async Task<bool> InviteUser(string emailAddress)
+        public async Task<InviteUserResult> InviteUser(string emailAddress)
         {
             await PrepareAuthenticatedClient();
             var data = new
@@ -57,7 +57,7 @@ namespace NOA.Common.Service
             if (response.StatusCode == HttpStatusCode.OK)
             {
                 var content = await response.Content.ReadAsStringAsync();
-                var s = JsonConvert.DeserializeObject<bool>(content);
+                var s = JsonConvert.DeserializeObject<InviteUserResult>(content);
                 return s;
 
             }

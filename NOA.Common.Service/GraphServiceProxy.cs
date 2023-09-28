@@ -11,6 +11,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Identity.Web;
 using Microsoft.Kiota.Abstractions;
 using Invitation = Microsoft.Graph.Models.Invitation;
+using Microsoft.Extensions.Logging;
 
 namespace NOA.Common.Service
 {
@@ -21,6 +22,7 @@ namespace NOA.Common.Service
         private readonly MicrosoftIdentityConsentAndConditionalAccessHandler _consentHandler;
         private readonly GraphServiceClient _graphServiceClient;
         private readonly ITokenAcquisition _tokenAcquisition;
+        private readonly ILogger<GraphServiceProxy> _logger;
 
         public GraphServiceProxy()
         {
@@ -34,8 +36,10 @@ namespace NOA.Common.Service
             ITokenAcquisition tokenAcquisition,
             IConfiguration configuration,
             GraphServiceClient graphServiceClient,
-            MicrosoftIdentityConsentAndConditionalAccessHandler consentHandler)
+            MicrosoftIdentityConsentAndConditionalAccessHandler consentHandler,
+            ILogger<GraphServiceProxy> logger)
         {
+            _logger = logger;
             _tokenAcquisition = tokenAcquisition;
 
             _graphScopes = configuration
@@ -51,14 +55,110 @@ namespace NOA.Common.Service
                 throw new NullReferenceException("The MicrosoftIdentityConsentAndConditionalAccessHandler has not been added to the services collection during the ConfigureServices()");
 
         }
-        
+
+        public async Task<List<DirectoryObject>> GetGroupMembers(string groupId)
+        {
+            // we use MSAL.NET to get a token to call the API On Behalf Of the current user
+            try
+            {
+                // Call the Graph API and retrieve the user's profile.
+                var reply =
+                    await CallGraphWithCAEFallback(
+                        async () =>
+                        {
+                            try
+                            {
+                                var members = await _graphServiceClient.Groups[groupId].Members.GetAsync((requestConfiguration) =>
+                                {
+                                    requestConfiguration.Headers.Add("ConsistencyLevel", "eventual");
+                                });
+
+                                return members?.Value;
+                            }
+                            catch (Exception ex)
+                            {
+                                _logger.LogError($"Caught error of type {ex.GetType()} with message: '{ex.Message + ex.InnerException}'");
+                                throw;
+                            }
+                        }
+                    );
+
+                return reply ?? new List<DirectoryObject>();
+            }
+            catch (MsalUiRequiredException ex)
+            {
+                _tokenAcquisition.ReplyForbiddenWithWwwAuthenticateHeader(_graphScopes, ex);
+                throw;
+            }
+            catch (MicrosoftIdentityWebChallengeUserException ex)
+            {
+                _logger.LogError($"Caught error of type {ex.GetType()} with message: '{ex.Message + ex.InnerException}'");
+                throw;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"Caught error of type {ex.GetType()} with message: '{ex.Message + ex.InnerException}'");
+                throw;
+            }
+        }
+
+        public async Task<bool> AddUserToGroup(string userMail, string groupId)
+        {
+
+            // we use MSAL.NET to get a token to call the API On Behalf Of the current user
+            try
+            {
+                // Call the Graph API and retrieve the user's profile.
+                var reply =
+                    await CallGraphWithCAEFallback(
+                        async () =>
+                        {
+                            try
+                            {
+                                var userToAdd = await GetGraphApiUser($"mail eq '{userMail}'");
+
+                                var requestBody = new ReferenceCreate
+                                {
+                                    OdataId = $"https://graph.microsoft.com/v1.0/directoryObjects/{userToAdd?.Id}",
+                                };
+                                await _graphServiceClient.Groups[groupId].Members.Ref.PostAsync(requestBody);
+                            }
+                            catch (Exception ex)
+                            {
+                                _logger.LogError($"Caught error of type {ex.GetType()} with message: '{ex.Message + ex.InnerException}'");
+                                throw;
+                            }
+                            return true;
+                        }
+                    );
+
+                return reply;
+            }
+            catch (MsalUiRequiredException ex)
+            {
+                _tokenAcquisition.ReplyForbiddenWithWwwAuthenticateHeader(_graphScopes, ex);
+                throw;
+            }
+            catch (MicrosoftIdentityWebChallengeUserException ex)
+            {
+                _logger.LogError($"Caught error of type {ex.GetType()} with message: '{ex.Message + ex.InnerException}'");
+                throw;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"Caught error of type {ex.GetType()} with message: '{ex.Message + ex.InnerException}'");
+                throw;
+            }
+        }
+
+
         public async Task<Invitation?> InviteUser(string email, string redirectUrl)
         {
             var requestBody = new Invitation
             {
                 InvitedUserEmailAddress = email,
                 InviteRedirectUrl = redirectUrl,
-                SendInvitationMessage = true
+                SendInvitationMessage = true,                
             };
 
             // we use MSAL.NET to get a token to call the API On Behalf Of the current user
@@ -77,6 +177,7 @@ namespace NOA.Common.Service
                             }
                             catch (Exception ex)
                             {
+                                _logger.LogError($"Caught error of type {ex.GetType()} with message: '{ex.Message + ex.InnerException}'");
                                 throw;
                             }
                         }
@@ -86,15 +187,18 @@ namespace NOA.Common.Service
             }
             catch (MsalUiRequiredException ex)
             {
+                _logger.LogError($"Caught error of type {ex.GetType()} with message: '{ex.Message + ex.InnerException}'");
                 _tokenAcquisition.ReplyForbiddenWithWwwAuthenticateHeader(_graphScopes, ex);
                 throw;
             }
             catch (MicrosoftIdentityWebChallengeUserException ex)
             {
+                _logger.LogError($"Caught error of type {ex.GetType()} with message: '{ex.Message + ex.InnerException}'");
                 throw;
             }
             catch (Exception ex)
             {
+                _logger.LogError($"Caught error of type {ex.GetType()} with message: '{ex.Message + ex.InnerException}'");
                 throw;
             }
         }
@@ -129,6 +233,7 @@ namespace NOA.Common.Service
                             }
                             catch (Exception ex)
                             {
+                                _logger.LogError($"Caught error of type {ex.GetType()} with message: '{ex.Message + ex.InnerException}'");
                                 throw;
                             }
                         }
@@ -143,15 +248,18 @@ namespace NOA.Common.Service
             }
             catch (MsalUiRequiredException ex)
             {
+                _logger.LogError($"Caught error of type {ex.GetType()} with message: '{ex.Message + ex.InnerException}'");
                 _tokenAcquisition.ReplyForbiddenWithWwwAuthenticateHeader(_graphScopes, ex);
                 throw;
             }
             catch (MicrosoftIdentityWebChallengeUserException ex)
             {
+                _logger.LogError($"Caught error of type {ex.GetType()} with message: '{ex.Message + ex.InnerException}'");
                 throw;
             }
             catch (Exception ex)
             {
+                _logger.LogError($"Caught error of type {ex.GetType()} with message: '{ex.Message + ex.InnerException}'");
                 throw;
             }
         }
@@ -185,7 +293,7 @@ namespace NOA.Common.Service
             catch (MsalUiRequiredException ex)
             {
                 _tokenAcquisition.ReplyForbiddenWithWwwAuthenticateHeader(_graphScopes, ex);
-                throw ex;
+                throw;
             }
         }
 
@@ -205,6 +313,7 @@ namespace NOA.Common.Service
             }
             catch (ServiceException ex) when (ex.Message.Contains("Continuous access evaluation resulted in claims challenge"))
             {
+                _logger.LogError($"Caught error of type {ex.GetType()} with message: '{ex.Message + ex.InnerException}'");
                 try
                 {
                     // Get challenge from response of Graph API
@@ -214,6 +323,7 @@ namespace NOA.Common.Service
                 }
                 catch (Exception ex2)
                 {
+                    _logger.LogError($"Caught error of type {ex2.GetType()} with message: '{ex.Message + ex.InnerException}'");
                     _consentHandler.HandleException(ex2);
                 }
 

@@ -104,10 +104,11 @@ namespace NorskOffshoreAuthenticateClient.Controllers
                     return View();
                 }
 
-                bool isInvited = await _usersService.InviteUser(emailAddress);
+                var isInvited = await _usersService.InviteUser(emailAddress);
 
                 ViewData["EmailAddress"] = emailAddress;
-                ViewData["IsInvited"] = isInvited;
+                ViewData["IsInvited"] = isInvited.InviteSuccess;
+                ViewData["IsAddedToAccessGroup"] = isInvited.AddGroupSuccess;
 
                 return View();
             }

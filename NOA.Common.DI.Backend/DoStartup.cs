@@ -87,10 +87,20 @@ namespace NOA.Common.DI.Backend
 
             var adOptionsSection = _configuration.GetSection(ConfigConstants.AzureAdOptions);
             var usersConnectionModelSection = _configuration.GetSection(ConfigConstants.UsersConnectionModel);
+            var aiOptions = new Microsoft.ApplicationInsights.AspNetCore.Extensions.ApplicationInsightsServiceOptions();
+
             _serviceCollection
                 .Configure<UsersConnectionModel>(opt => usersConnectionModelSection.Bind(opt))
-                .Configure<AzureAdOptions>(opt => adOptionsSection.Bind(opt))
-                .AddLogging()
+                .Configure<AzureAdOptions>(opt => adOptionsSection.Bind(opt))                            
+                .AddApplicationInsightsTelemetry(aiOptions)
+                .AddLogging(builder =>
+                {
+                    // Only Application Insights is registered as a logger provider
+                    builder.AddApplicationInsights(
+                        configureTelemetryConfiguration: (config) => config.ConnectionString = (_configuration["ApplicationInsights:ConnectionString"] as string),
+                        configureApplicationInsightsLoggerOptions: (options) => { }
+                    );
+                })
                 .AddTransient<IGraphServiceProxy, GraphServiceProxy>()
                 .AddTransient<Service.IAuthenticationService, Service.AuthenticationService>();
         }
