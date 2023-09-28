@@ -94,6 +94,34 @@ namespace NorskOffshoreAuthenticateClient.Controllers
             }
         }
 
+        public async Task<ActionResult> RemoveUserFromGroup(string emailAddress, string groupId)
+        {
+            try
+            {
+                var userListModeldata = await _usersService.GetAllUsers();
+
+                if (String.IsNullOrEmpty(emailAddress))
+                {
+                    ViewData["ErrorToView"] = "Parameter 'emailAddress' was empty. Try again?";
+                } else if (String.IsNullOrEmpty(groupId))
+                {
+                    ViewData["ErrorToView"] = "Parameter 'groupId' was empty. Try again?";
+
+                } else
+                {
+                    var status = await _usersService.RemoveFromGroup(emailAddress, groupId);
+                    ViewData["IsRemovedFromAccessGroupResult"] = status.ToString();
+                }
+
+                return View(userListModeldata);
+            }
+            catch (Exception ex)
+            {
+                LogException(ex);
+                throw;
+            }
+        }
+
         public async Task<ActionResult> AddUserToGroup(string emailAddress, string groupId)
         {
             try

@@ -17,5 +17,7 @@ namespace NOA.Common.Service
         Task<UserStatus> GetUserStatus(string email);
         Task<InviteUserResult> InviteUser(string emailAddress);
         Task<AddToGroupStatus> AddToGroup(string emailAddress, string groupId);
+        Task<RemoveFromGroupStatus> RemoveFromGroup(string emailAddress, string groupId);
+        Task<List<UserItem>> GetAllUsers();
     }
 }

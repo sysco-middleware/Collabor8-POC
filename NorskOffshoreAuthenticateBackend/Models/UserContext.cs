@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using NOA.Common.Service.Model;
 
 namespace NorskOffshoreAuthenticateBackend.Models
 {

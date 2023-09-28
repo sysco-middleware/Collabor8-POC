@@ -1,0 +1,51 @@
+﻿@model List<UserItem>
+@{
+    ViewData["Title"] = "Remove user from Group";
+    string errorMessageFromBackend = ViewData["ErrorToView"] as string ?? string.Empty;
+    string IsRemovedFromAccessGroupResult = ViewData["IsRemovedFromAccessGroupResult"] as string;
+}
+
+<div class="container">
+    <h2>Remove user from group</h2>
+    <form method="post" action="/Users/RemoveUserFromGroup">
+        <div class="form-group">
+            <label for="emailAddress">Email Address:</label>
+            <select class="form-control" id="emailAddress" name="emailAddress">
+                @foreach(var user in @Model) {
+                    <option value="@user.Email">@user.Email</option>
+                }
+            </select>
+            <label for="groupId">Choose an access group:</label>
+            <select class="form-control"  id="groupId" name="groupId">
+                <option value="13e5b632-453a-4948-ad72-6df4599839d5">ON Role Product Hello Users</option>
+                <option value="667a757a-03f3-44ee-b6bb-f11fd58920fd">WebApp_MultiTenant_v2 (for test)</option>
+            </select>
+        </div>
+        <button type="submit" class="btn btn-primary">Submit</button>
+    </form>
+    
+    @if (!String.IsNullOrEmpty(IsRemovedFromAccessGroupResult) && IsRemovedFromAccessGroupResult == "Success")
+    {
+        <br />
+        <div>
+            <i style="color: green;" class="fas fa-check-circle"></i> <!-- Need FontAwesome for icons -->
+            <span>Action performed: @IsRemovedFromAccessGroupResult</span>
+        </div>
+    }
+    else if (!String.IsNullOrEmpty(IsRemovedFromAccessGroupResult))
+    {
+        <br />
+        <div>
+            <i style="color: red;" class="fas fa-solid fa-circle-exclamation"></i> <!-- Need FontAwesome for icons -->
+            <span>Membership removal failed: @IsRemovedFromAccessGroupResult</span>
+        </div>
+    }
+    @if (!string.IsNullOrEmpty(errorMessageFromBackend))
+    {
+        <br />
+        <div class="green-checkmark">
+            <i style="color: red;" class="fas fa-solid fa-circle-exclamation"></i>
+            <span>@errorMessageFromBackend </span>
+        </div>
+    }
+</div>

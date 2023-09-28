@@ -89,6 +89,72 @@ namespace NorskOffshoreAuthenticateBackend.Controllers
             return AddToGroupStatus.Failed;            
         }
 
+        [HttpGet("GetAllUsers")]
+        [RequiredScopeOrAppPermission(
+            AcceptedScope = new string[] { _usersReadScope, _usersReadWriteScope },
+            AcceptedAppPermission = new string[] { _usersReadAllPermission, _usersReadWriteAllPermission })]
+        public async Task<List<UserItem>> GetAllUsers()
+        {
+            List<UserItem> userItems = new List<UserItem>();
+            try
+            {
+                var users = (await _graphServiceProxy.GetAllUsers()).Where(x => !String.IsNullOrEmpty(x.Mail));
+                foreach(var user in users)
+                {
+                    userItems.Add(new UserItem()
+                    {
+                        Id=user.Id,
+                        Username = user.UserPrincipalName,
+                        Email = user.Mail,
+                        DisplayName = user.DisplayName,
+                        GivenName = user.GivenName,
+                        Enabled = user.AccountEnabled,
+                        MobilePhone = user.MobilePhone,
+                        Country = user.Country,
+                        StreetAddress = user.StreetAddress,
+                        Photo = user.Photo
+                    });
+                }
+            }
+            catch (Exception e)
+            {
+                _logger.LogError($"Caught exception of type '{e.GetType()}' with message: '{e.Message + e.InnerException}'");
+            }
+            return userItems;
+        }
+
+        [HttpPost("RemoveUserFromGroup")]
+        [RequiredScopeOrAppPermission(
+            AcceptedScope = new string[] { _usersReadScope, _usersReadWriteScope },
+            AcceptedAppPermission = new string[] { _usersReadAllPermission, _usersReadWriteAllPermission })]
+        public async Task<RemoveFromGroupStatus> RemoveUserFromGroup(string userMail, string groupId)
+        {
+            if (String.IsNullOrEmpty(userMail) || String.IsNullOrEmpty(groupId))
+            {
+                return RemoveFromGroupStatus.MissingParameters;
+            }
+
+            try
+            {
+                var groupMembers = await _graphServiceProxy.GetGroupMembers(groupId);
+                var userAdded = await _graphServiceProxy.GetGraphApiUser($"mail eq '{userMail}'");
+                if (groupMembers.Exists(x => x.Id == userAdded.Id))
+                {
+                    var invitationResult = await _graphServiceProxy.RemoveUserFromGroup(
+                        userMail,
+                        groupId);
+                    return invitationResult ? RemoveFromGroupStatus.Success : RemoveFromGroupStatus.Failed;
+                }
+                return RemoveFromGroupStatus.NotMember;
+            }
+            catch (Exception e)
+            {
+                _logger.LogError($"Caught exception of type '{e.GetType()}' with message: '{e.Message + e.InnerException}'");
+            }
+
+            return RemoveFromGroupStatus.Failed;
+        }
+
         [HttpPost("InviteUser")]
         [RequiredScopeOrAppPermission(
             AcceptedScope = new string[] { _usersReadScope, _usersReadWriteScope },
@@ -243,7 +309,7 @@ namespace NorskOffshoreAuthenticateBackend.Controllers
         {
             try
             {
-                List<string> users = await _graphServiceProxy.GetAllGraphApiUsers();
+                List<string> users = await _graphServiceProxy.GetAllUsersUPN();
                 return users;
             }
             catch (MsalUiRequiredException ex)

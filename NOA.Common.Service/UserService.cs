@@ -17,6 +17,7 @@ using NOA.Common.Constants;
 using NOA.Common.Service.Model;
 using NOA.Common.Service.Utils;
 using Microsoft.Extensions.Logging;
+using System.Net.Mail;
 
 namespace NOA.Common.Service
 {
@@ -41,6 +42,26 @@ namespace NOA.Common.Service
             }
         }
 
+        public async Task<List<UserItem>> GetAllUsers()
+        {
+            await PrepareAuthenticatedClient();
+
+            var response = await _httpClient.GetAsync($"{_UsersBaseAddress}api/users/GetAllUsers");
+
+            if (response.StatusCode == HttpStatusCode.OK)
+            {
+                var content = await response.Content.ReadAsStringAsync();
+                var s = JsonConvert.DeserializeObject<List<UserItem>>(content);
+                return s;
+
+            }
+            else if (response.StatusCode == HttpStatusCode.Unauthorized)
+            {
+                HandleChallengeFromWebApi(response);
+            }
+            throw new HttpRequestException($"Invalid status code in the HttpResponseMessage: {response.StatusCode}.");
+        }
+
         public async Task<InviteUserResult> InviteUser(string emailAddress)
         {
             await PrepareAuthenticatedClient();
@@ -58,6 +79,34 @@ namespace NOA.Common.Service
             {
                 var content = await response.Content.ReadAsStringAsync();
                 var s = JsonConvert.DeserializeObject<InviteUserResult>(content);
+                return s;
+
+            }
+            else if (response.StatusCode == HttpStatusCode.Unauthorized)
+            {
+                HandleChallengeFromWebApi(response);
+            }
+            throw new HttpRequestException($"Invalid status code in the HttpResponseMessage: {response.StatusCode}.");
+        }
+
+        public async Task<RemoveFromGroupStatus> RemoveFromGroup(string emailAddress, string groupId)
+        {
+            await PrepareAuthenticatedClient();
+            var data = new
+            {
+                userMail = emailAddress,
+                groupId = groupId
+                // Add other properties as needed
+            };
+
+            var jsonContent = new StringContent(JsonConvert.SerializeObject(data), Encoding.UTF8, "application/json");
+
+            var response = await _httpClient.PostAsync($"{_UsersBaseAddress}api/users/RemoveUserFromGroup?userMail={emailAddress}&groupId={groupId}", jsonContent);
+
+            if (response.StatusCode == HttpStatusCode.OK)
+            {
+                var content = await response.Content.ReadAsStringAsync();
+                var s = JsonConvert.DeserializeObject<RemoveFromGroupStatus>(content);
                 return s;
 
             }

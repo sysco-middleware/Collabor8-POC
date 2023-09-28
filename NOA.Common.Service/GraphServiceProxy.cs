@@ -103,6 +103,57 @@ namespace NOA.Common.Service
             }
         }
 
+        public async Task<bool> RemoveUserFromGroup(string userMail, string groupId)
+        {
+
+            // we use MSAL.NET to get a token to call the API On Behalf Of the current user
+            try
+            {
+                // Call the Graph API and retrieve the user's profile.
+                var reply =
+                    await CallGraphWithCAEFallback(
+                        async () =>
+                        {
+                            try
+                            {
+                                var userToRemove = await GetGraphApiUser($"mail eq '{userMail}'");
+                                if(userToRemove == null)
+                                {
+                                    return false;
+                                }
+
+                                await _graphServiceClient.Groups[groupId].Members[userToRemove.Id].Ref.DeleteAsync();
+
+                            }
+                            catch (Exception ex)
+                            {
+                                _logger.LogError($"Caught error of type {ex.GetType()} with message: '{ex.Message + ex.InnerException}'");
+  
+                                throw;
+                            }
+                            return true;
+                        }
+                    );
+
+                return reply;
+            }
+            catch (MsalUiRequiredException ex)
+            {
+                _tokenAcquisition.ReplyForbiddenWithWwwAuthenticateHeader(_graphScopes, ex);
+                throw;
+            }
+            catch (MicrosoftIdentityWebChallengeUserException ex)
+            {
+                _logger.LogError($"Caught error of type {ex.GetType()} with message: '{ex.Message + ex.InnerException}'");
+                throw;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"Caught error of type {ex.GetType()} with message: '{ex.Message + ex.InnerException}'");
+                throw;
+            }
+        }
+
         public async Task<bool> AddUserToGroup(string userMail, string groupId)
         {
 
@@ -264,7 +315,7 @@ namespace NOA.Common.Service
             }
         }
 
-        public async Task<List<string>> GetAllGraphApiUsers()
+        public async Task<List<string>> GetAllUsersUPN()
         {
             // We use MSAL.NET to get a token to call the API On Behalf Of the current user
             try
@@ -287,6 +338,42 @@ namespace NOA.Common.Service
                 if (users != null)
                 {
                     return users.Value.Select(x => x.UserPrincipalName).ToList();
+                }
+                throw new Exception("Got null from Microsoft Graph Api");
+            }
+            catch (MsalUiRequiredException ex)
+            {
+                _tokenAcquisition.ReplyForbiddenWithWwwAuthenticateHeader(_graphScopes, ex);
+                throw;
+            }
+        }
+
+        public async Task<List<User>> GetAllUsers()
+        {
+            // We use MSAL.NET to get a token to call the API On Behalf Of the current user
+            try
+            {
+                // Call the Graph API and retrieve the user's profile.
+                var users =
+                await CallGraphWithCAEFallback(
+                async () =>
+                {
+                    return await _graphServiceClient.Users.GetAsync(r =>
+                    {
+                        r.QueryParameters.Filter = "accountEnabled eq true";
+                        r.QueryParameters.Select = new string[]
+                        {
+                                            "id", "userPrincipalName", "displayName",
+                                            "givenName", "accountEnabled", "mail",
+                                            "mobilePhone", "country", "streetAddress",
+                                            "photo"
+                        };
+                    });
+                });
+
+                if (users != null)
+                {
+                    return users.Value ?? new List<User>();
                 }
                 throw new Exception("Got null from Microsoft Graph Api");
             }
