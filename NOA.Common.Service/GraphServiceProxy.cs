@@ -55,6 +55,53 @@ namespace NOA.Common.Service
                 throw new NullReferenceException("The MicrosoftIdentityConsentAndConditionalAccessHandler has not been added to the services collection during the ConfigureServices()");
 
         }
+
+        public async Task<List<DirectoryObject>> GetGroupMembers(string groupId)
+        {
+            // we use MSAL.NET to get a token to call the API On Behalf Of the current user
+            try
+            {
+                // Call the Graph API and retrieve the user's profile.
+                var reply =
+                    await CallGraphWithCAEFallback(
+                        async () =>
+                        {
+                            try
+                            {
+                                var members = await _graphServiceClient.Groups[groupId].Members.GetAsync((requestConfiguration) =>
+                                {
+                                    requestConfiguration.Headers.Add("ConsistencyLevel", "eventual");
+                                });
+
+                                return members?.Value;
+                            }
+                            catch (Exception ex)
+                            {
+                                _logger.LogError($"Caught error of type {ex.GetType()} with message: '{ex.Message + ex.InnerException}'");
+                                throw;
+                            }
+                        }
+                    );
+
+                return reply ?? new List<DirectoryObject>();
+            }
+            catch (MsalUiRequiredException ex)
+            {
+                _tokenAcquisition.ReplyForbiddenWithWwwAuthenticateHeader(_graphScopes, ex);
+                throw;
+            }
+            catch (MicrosoftIdentityWebChallengeUserException ex)
+            {
+                _logger.LogError($"Caught error of type {ex.GetType()} with message: '{ex.Message + ex.InnerException}'");
+                throw;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"Caught error of type {ex.GetType()} with message: '{ex.Message + ex.InnerException}'");
+                throw;
+            }
+        }
+
         public async Task<bool> AddUserToGroup(string userMail, string groupId)
         {
 

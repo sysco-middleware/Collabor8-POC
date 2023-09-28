@@ -3,6 +3,7 @@
     string emailAddress = ViewData["EmailAddress"] as string ?? string.Empty;
     string errorMessageFromBackend = ViewData["ErrorToView"] as string ?? string.Empty;
     bool? isInvited = ViewData["IsInvited"] as bool?;
+    bool? IsAddedToAccessGroup = ViewData["IsAddedToAccessGroup"] as bool?;
 }
 
 <div class="container">
@@ -36,6 +37,23 @@
         <div>
             <i style="color: red;" class="fas fa-solid fa-circle-exclamation"></i> <!-- Need FontAwesome for icons -->
             <span>Not Invited</span>
+        </div>
+    }
+
+    @if (IsAddedToAccessGroup.HasValue && IsAddedToAccessGroup.Value)
+    {
+        <br />
+        <div>
+            <i style="color: green;" class="fas fa-check-circle"></i> <!-- Need FontAwesome for icons -->
+            <span>Given access</span>
+        </div>
+    }
+    else if (IsAddedToAccessGroup.HasValue && !IsAddedToAccessGroup.Value)
+    {
+        <br />
+        <div>
+            <i style="color: red;" class="fas fa-solid fa-circle-exclamation"></i> <!-- Need FontAwesome for icons -->
+            <span>Access group grant failed</span>
         </div>
     }
     @if (!string.IsNullOrEmpty(errorMessageFromBackend))

@@ -15,6 +15,7 @@ using Microsoft.CodeAnalysis.Options;
 using NOA.Common.Service.Model;
 using Microsoft.Extensions.Options;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 
 namespace AuthenticateService_IntegrationTests
 {
@@ -46,7 +47,7 @@ namespace AuthenticateService_IntegrationTests
 
             //gp.Setup(x => x.GetGraphApiUser($"mail eq '{userMail_missing}'")).ReturnsAsync(null);
 
-            UsersController = new UsersController(op, gp.Object, ca, ia.Object);
+            UsersController = new UsersController(op, gp.Object, ca, ia.Object, new Mock<ILogger<UsersController>>().Object);
         }
 
         [Fact]
