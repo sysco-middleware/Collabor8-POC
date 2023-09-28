@@ -1,46 +1,26 @@
 ﻿@{
-    ViewData["Title"] = "Invite user";
+    ViewData["Title"] = "Add to Group";
     string emailAddress = ViewData["EmailAddress"] as string ?? string.Empty;
     string errorMessageFromBackend = ViewData["ErrorToView"] as string ?? string.Empty;
-    bool? isInvited = ViewData["IsInvited"] as bool?;
-    bool? IsAddedToAccessGroup = ViewData["IsAddedToAccessGroup"] as bool?;
+    string IsAddedToAccessGroupResult = ViewData["IsAddedToAccessGroupResult"] as string;
 }
 
 <div class="container">
-    <h2>Invite user</h2>
-    <form method="post" action="/Users/InviteUser">
+    <h2>Add user to group</h2>
+    <form method="post" action="/Users/AddUserToGroup">
         <div class="form-group">
             <label for="emailAddress">Email Address:</label>
             <input type="email" class="form-control" id="emailAddress" name="emailAddress" placeholder="Enter email address" value="@emailAddress" required>
+            <label for="groupId">Choose an access group:</label>
+            <select class="form-control"  id="groupId" name="groupId">
+                <option value="13e5b632-453a-4948-ad72-6df4599839d5">ON Role Product Hello Users</option>
+                <option value="667a757a-03f3-44ee-b6bb-f11fd58920fd">WebApp_MultiTenant_v2 (for test)</option>
+            </select>
         </div>
         <button type="submit" class="btn btn-primary">Submit</button>
     </form>
     
-    @if (!isInvited.HasValue)
-    {
-        <br />
-        <div>
-            <span>Input needed</span>
-        </div>
-    }
-    else if (isInvited.Value)
-    {
-        <br />
-        <div>
-            <i style="color: green;" class="fas fa-check-circle"></i> <!-- Need FontAwesome for icons -->
-            <span>Invited</span>
-        </div>
-    }
-    else
-    {
-        <br />
-        <div>
-            <i style="color: red;" class="fas fa-solid fa-circle-exclamation"></i> <!-- Need FontAwesome for icons -->
-            <span>Not Invited</span>
-        </div>
-    }
-
-    @if (IsAddedToAccessGroup.HasValue && IsAddedToAccessGroup.Value)
+    @if (!String.IsNullOrEmpty(IsAddedToAccessGroupResult) && IsAddedToAccessGroupResult == "Success")
     {
         <br />
         <div>
@@ -48,12 +28,12 @@
             <span>Given access</span>
         </div>
     }
-    else if (IsAddedToAccessGroup.HasValue && !IsAddedToAccessGroup.Value)
+    else if (!String.IsNullOrEmpty(IsAddedToAccessGroupResult))
     {
         <br />
         <div>
             <i style="color: red;" class="fas fa-solid fa-circle-exclamation"></i> <!-- Need FontAwesome for icons -->
-            <span>Access group grant failed</span>
+            <span>Access group grant failed: @IsAddedToAccessGroupResult</span>
         </div>
     }
     @if (!string.IsNullOrEmpty(errorMessageFromBackend))

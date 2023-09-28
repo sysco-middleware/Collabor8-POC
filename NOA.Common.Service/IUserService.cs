@@ -16,5 +16,6 @@ namespace NOA.Common.Service
         Task<bool> CanAuthenticateUser(string email);
         Task<UserStatus> GetUserStatus(string email);
         Task<InviteUserResult> InviteUser(string emailAddress);
+        Task<AddToGroupStatus> AddToGroup(string emailAddress, string groupId);
     }
 }

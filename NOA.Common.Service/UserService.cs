@@ -68,6 +68,34 @@ namespace NOA.Common.Service
             throw new HttpRequestException($"Invalid status code in the HttpResponseMessage: {response.StatusCode}.");
         }
 
+        public async Task<AddToGroupStatus> AddToGroup(string emailAddress, string groupId)
+        {
+            await PrepareAuthenticatedClient();
+            var data = new
+            {
+                userMail = emailAddress,
+                groupId = groupId
+                // Add other properties as needed
+            };
+
+            var jsonContent = new StringContent(JsonConvert.SerializeObject(data), Encoding.UTF8, "application/json");
+
+            var response = await _httpClient.PostAsync($"{_UsersBaseAddress}api/users/AddToGroup?userMail={emailAddress}&groupId={groupId}", jsonContent);
+
+            if (response.StatusCode == HttpStatusCode.OK)
+            {
+                var content = await response.Content.ReadAsStringAsync();
+                var s = JsonConvert.DeserializeObject<AddToGroupStatus>(content);
+                return s;
+
+            }
+            else if (response.StatusCode == HttpStatusCode.Unauthorized)
+            {
+                HandleChallengeFromWebApi(response);
+            }
+            throw new HttpRequestException($"Invalid status code in the HttpResponseMessage: {response.StatusCode}.");
+        }
+
         public async Task<UserItem> GetLoggedInUser()
         {
             await PrepareAuthenticatedClient();

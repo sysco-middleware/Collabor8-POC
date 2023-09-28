@@ -56,6 +56,39 @@ namespace NorskOffshoreAuthenticateBackend.Controllers
             _logger = logger;
         }
 
+
+
+        [HttpPost("AddToGroup")]
+        [RequiredScopeOrAppPermission(
+            AcceptedScope = new string[] { _usersReadScope, _usersReadWriteScope },
+            AcceptedAppPermission = new string[] { _usersReadAllPermission, _usersReadWriteAllPermission })]
+        public async Task<AddToGroupStatus> AddToGroup(string userMail, string groupId)
+        {
+            if (String.IsNullOrEmpty(userMail) || String.IsNullOrEmpty(groupId))
+            {
+                return AddToGroupStatus.MissingParameters;
+            }
+
+            try {
+                var groupMembers = await _graphServiceProxy.GetGroupMembers(groupId);
+                var userAdded = await _graphServiceProxy.GetGraphApiUser($"mail eq '{userMail}'");
+                if (!groupMembers.Exists(x => x.Id == userAdded.Id))
+                {
+                    var invitationResult = await _graphServiceProxy.AddUserToGroup(
+                        userMail,
+                        groupId);
+                    return invitationResult ? AddToGroupStatus.Success : AddToGroupStatus.Failed;
+                }
+                return AddToGroupStatus.AlreadyMember;
+            }
+            catch (Exception e)
+            {
+                _logger.LogError($"Caught exception of type '{e.GetType()}' with message: '{e.Message + e.InnerException}'");
+            }
+
+            return AddToGroupStatus.Failed;            
+        }
+
         [HttpPost("InviteUser")]
         [RequiredScopeOrAppPermission(
             AcceptedScope = new string[] { _usersReadScope, _usersReadWriteScope },

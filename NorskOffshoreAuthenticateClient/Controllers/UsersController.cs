@@ -94,6 +94,36 @@ namespace NorskOffshoreAuthenticateClient.Controllers
             }
         }
 
+        public async Task<ActionResult> AddUserToGroup(string emailAddress, string groupId)
+        {
+            try
+            {
+                if (String.IsNullOrEmpty(emailAddress))
+                {
+                    ViewData["ErrorToView"] = "Parameter 'emailAddress' was empty. Try again?";
+                    return View();
+                }
+
+                if (String.IsNullOrEmpty(groupId))
+                {
+                    ViewData["ErrorToView"] = "Parameter 'groupId' was empty. Try again?";
+                    return View();
+                }
+
+                var status = await _usersService.AddToGroup(emailAddress, groupId);
+
+                ViewData["EmailAddress"] = emailAddress;
+                ViewData["IsAddedToAccessGroupResult"] = status.ToString();
+
+                return View();
+            }
+            catch (Exception ex)
+            {
+                LogException(ex);
+                throw;
+            }
+        }
+
         public async Task<ActionResult> InviteUser(string emailAddress)
         {
             try
